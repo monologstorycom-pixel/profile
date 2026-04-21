@@ -1,3 +1,38 @@
+<?php
+require '../admin/koneksi.php'; // Koneksi mundur 1 folder karena ada di dalam folder slws/
+
+// 1. Ambil data kategori dari database
+$stmt_cat = $pdo->query("SELECT * FROM slws_categories");
+$categories_db = $stmt_cat->fetchAll();
+
+$data_kategori = [];
+foreach ($categories_db as $kat) {
+    // 2. Ambil semua foto milik kategori ini
+    $stmt_photo = $pdo->prepare("SELECT image_path FROM slws_photos WHERE category_id = ? ORDER BY id DESC");
+    $stmt_photo->execute([$kat['id']]);
+    $photos_db = $stmt_photo->fetchAll(PDO::FETCH_COLUMN);
+    
+    // 3. Tambahkan '../' ke depan path agar gambar merujuk ke luar folder slws (ke root uploads/)
+    $photo_urls = array_map(function($path) {
+        return '../' . $path; 
+    }, $photos_db);
+    
+    // 4. Jadikan foto pertama sebagai Cover Folder otomatis (kalau ada)
+    $cover = count($photo_urls) > 0 ? $photo_urls[0] : '';
+
+    // Susun format arraynya agar sama persis seperti yang diminta Javascript lama kamu
+    $data_kategori[] = [
+        'id' => $kat['id'],
+        'name' => $kat['name'],
+        'icon' => $kat['icon'],
+        'cover' => $cover,
+        'photos' => $photo_urls
+    ];
+}
+
+// Convert array PHP menjadi JSON Text
+$json_categories = json_encode($data_kategori);
+?>
 <!DOCTYPE html>
 <html lang="id" data-theme="dark">
 <head>
@@ -362,17 +397,15 @@
     <span id="tlbl">Light</span>
 </button>
 
-<!-- ══ PAGE: HOME ══ -->
 <div class="page active" id="page-home">
     <div class="site-header">
-        <a href="/" class="back-btn">
-            <i class="fas fa-arrow-left"></i> Kembali ke Portfolio
+        <a href="../index.php" class="back-btn"> <i class="fas fa-arrow-left"></i> Kembali ke Portfolio
         </a>
         <span class="logo-line">// SELAWAS VISUAL · Pekalongan</span>
         <h1>Portfolio Fotografi</h1>
         <p class="tagline">Studio fotografi independen · 2017 — 2024</p>
         <div class="meta-row">
-            <div class="meta-item"><i class="fas fa-folder"></i> 5 kategori</div>
+            <div class="meta-item"><i class="fas fa-folder"></i> <?= count($data_kategori) ?> kategori</div>
             <div class="meta-item"><i class="fas fa-calendar"></i> 2017 — 2024</div>
             <div class="meta-item"><i class="fas fa-map-marker-alt"></i> Pekalongan</div>
         </div>
@@ -381,16 +414,14 @@
     <div class="folder-section">
         <div class="section-label">Pilih Kategori</div>
         <div class="folder-grid" id="folder-grid">
-            <!-- Diisi oleh JS -->
-        </div>
+            </div>
     </div>
 
     <footer>
-        <p>© 2024 SELAWAS VISUAL — <a href="mailto:rizqisubagyo07@gmail.com">rizqisubagyo07@gmail.com</a></p>
+        <p>© <?= date('Y') ?> SELAWAS VISUAL — <a href="mailto:rizqisubagyo07@gmail.com">rizqisubagyo07@gmail.com</a></p>
     </footer>
 </div>
 
-<!-- ══ PAGE: GALLERY ══ -->
 <div class="page" id="page-gallery">
     <div class="gallery-header">
         <div class="gallery-header-top">
@@ -409,11 +440,10 @@
     </div>
 
     <footer>
-        <p>© 2024 SELAWAS VISUAL — <a href="mailto:rizqisubagyo07@gmail.com">rizqisubagyo07@gmail.com</a></p>
+        <p>© <?= date('Y') ?> SELAWAS VISUAL — <a href="mailto:rizqisubagyo07@gmail.com">rizqisubagyo07@gmail.com</a></p>
     </footer>
 </div>
 
-<!-- ══ LIGHTBOX ══ -->
 <div class="lightbox" id="lightbox" onclick="lbClickOutside(event)">
     <div class="lb-wrap">
         <button class="lb-close" onclick="closeLb()">&times;</button>
@@ -425,73 +455,9 @@
 </div>
 
 <script>
-// ── DATA KATEGORI ──
-// Untuk tambah foto: isi array photos[] di tiap kategori
-// Format URL: 'https://rsby.my.id/slws/NAMA_FOLDER/NAMA_FILE.jpg'
-
-const categories = [
-    {
-        id: 'wedding',
-        name: 'Wedding',
-        icon: 'fa-heart',
-        cover: 'https://rsby.my.id/slws/img/SLW05089.jpg',
-        photos: [
-            'http://192.168.1.109:6969/slws/img/SLW05089.jpg',
-            'http://192.168.1.109:6969/slws/img/SLW05110.jpg',
-            'http://192.168.1.109:6969/slws/img/SLW05113.jpg',
-            'http://192.168.1.109:6969/slws/img/SLW05117.jpg',
-            'http://192.168.1.109:6969/slws/img/SLW05125.jpg',
-            'http://192.168.1.109:6969/slws/img/SLW05248.jpg',
-            'http://192.168.1.109:6969/slws/img/SLW05288.jpg',
-            'http://192.168.1.109:6969/slws/img/SLW05333.jpg',
-        ]
-    },
-    {
-        id: 'portrait',
-        name: 'Portrait',
-        icon: 'fa-user',
-        cover: 'http://192.168.1.109:6969/slws/portrait/SLW00237.jpg',
-        photos: [
-            'http://192.168.1.109:6969/slws/portrait/SLW00177.jpg',
-            'http://192.168.1.109:6969/slws/portrait/SLW00237.jpg',
-            'http://192.168.1.109:6969/slws/portrait/SLW01000.jpg',
-            'http://192.168.1.109:6969/slws/portrait/SLW01042.jpg',
-
-
-
-        ]
-    },
-
- {
-        id: 'couple',
-        name: 'Couple',
-        icon: 'fa-heart',
-        cover: '',
-        photos: [
-           
-
-
-
-        ]
-    },
-
-
-
-    {
-        id: 'product',
-        name: 'Product',
-        icon: 'fa-box-open',
-        cover: '',
-        photos: []
-    },
-    {
-        id: 'event',
-        name: 'Event',
-        icon: 'fa-star',
-        cover: '',
-        photos: []
-    }
-];
+// ── INJEKSI DATA PHP KE JAVASCRIPT ──
+// Data sekarang otomatis memanggil dari Database (PHP Variable)!
+const categories = <?= $json_categories ?>;
 
 // ── STATE ──
 let currentPhotos = [];

@@ -6,6 +6,11 @@ if (!isset($_SESSION['admin_logged_in'])) {
     header("Location: login.php");
     exit;
 }
+
+// Ambil jumlah data untuk ditampilkan di kotak dashboard
+$jml_experience = $pdo->query("SELECT COUNT(*) FROM experiences")->fetchColumn();
+$jml_projects = $pdo->query("SELECT COUNT(*) FROM projects")->fetchColumn();
+$jml_foto = $pdo->query("SELECT COUNT(*) FROM slws_photos")->fetchColumn(); // Ini masih 0 karena belum kita isi
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -31,11 +36,11 @@ if (!isset($_SESSION['admin_logged_in'])) {
         </div>
         <a href="index.php" class="active"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
         <a href="profil.php"><i class="fas fa-user-edit me-2"></i> Pengaturan Profil</a>
-        <a href="#"><i class="fas fa-briefcase me-2"></i> Kelola Experience</a>
-        <a href="#"><i class="fas fa-project-diagram me-2"></i> Kelola Projects</a>
+        <a href="experience.php"><i class="fas fa-briefcase me-2"></i> Kelola Experience</a>
+        <a href="projects.php"><i class="fas fa-project-diagram me-2"></i> Kelola Projects</a>
         <div class="px-3 mt-4 mb-2 text-muted"><small>SELAWAS VISUAL</small></div>
-        <a href="#"><i class="fas fa-folder me-2"></i> Kategori Foto</a>
-        <a href="#"><i class="fas fa-images me-2"></i> Galeri Foto</a>
+        <a href="kategori.php"><i class="fas fa-folder me-2"></i> Kategori Foto</a>
+        <a href="galeri.php"><i class="fas fa-images me-2"></i> Galeri Foto</a>
         
         <div class="mt-5">
             <a href="logout.php" class="text-danger"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
@@ -53,7 +58,7 @@ if (!isset($_SESSION['admin_logged_in'])) {
                 <div class="card text-white bg-primary mb-3 shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title"><i class="fas fa-briefcase"></i> Experience</h5>
-                        <p class="card-text fs-4">0</p>
+                        <p class="card-text fs-2 fw-bold"><?= $jml_experience ?></p>
                     </div>
                 </div>
             </div>
@@ -61,7 +66,7 @@ if (!isset($_SESSION['admin_logged_in'])) {
                 <div class="card text-white bg-success mb-3 shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title"><i class="fas fa-project-diagram"></i> Projects</h5>
-                        <p class="card-text fs-4">0</p>
+                        <p class="card-text fs-2 fw-bold"><?= $jml_projects ?></p>
                     </div>
                 </div>
             </div>
@@ -69,7 +74,7 @@ if (!isset($_SESSION['admin_logged_in'])) {
                 <div class="card text-white bg-warning mb-3 shadow-sm">
                     <div class="card-body">
                         <h5 class="card-title"><i class="fas fa-images"></i> Foto Portfolio</h5>
-                        <p class="card-text fs-4">0</p>
+                        <p class="card-text fs-2 fw-bold"><?= $jml_foto ?></p>
                     </div>
                 </div>
             </div>

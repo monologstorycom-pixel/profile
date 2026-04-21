@@ -73,8 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         </div>
         <a href="index.php"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
         <a href="profil.php" class="active"><i class="fas fa-user-edit me-2"></i> Pengaturan Profil</a>
-        <a href="#"><i class="fas fa-briefcase me-2"></i> Kelola Experience</a>
-        <a href="#"><i class="fas fa-project-diagram me-2"></i> Kelola Projects</a>
+        <a href="experience.php"><i class="fas fa-briefcase me-2"></i> Kelola Experience</a>
+        <a href="projects.php"><i class="fas fa-project-diagram me-2"></i> Kelola Projects</a>
         <a href="logout.php" class="text-danger mt-5"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
     </div>
 

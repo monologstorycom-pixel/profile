@@ -1,19 +1,35 @@
 <?php
 require 'admin/koneksi.php';
-// Ambil data profil
+
+// --- AMBIL DATA PROFIL ---
 $stmt = $pdo->query("SELECT * FROM profile_settings LIMIT 1");
 $profil = $stmt->fetch();
 
-// Atur fallback kalau datanya kosong
 $nama = htmlspecialchars($profil['full_name'] ?? 'Rizqi Subagyo');
 $tagline = htmlspecialchars($profil['tagline'] ?? 'IT Support Specialist | Full-stack Developer');
 $status = htmlspecialchars($profil['availability_status'] ?? 'Tersedia');
 $email = htmlspecialchars($profil['email'] ?? 'rizqisubagyo07@gmail.com');
-$github = htmlspecialchars($profil['github_link'] ?? '#');
-$linkedin = htmlspecialchars($profil['linkedin_link'] ?? '#');
-
-// Cek foto
+$github = htmlspecialchars($profil['github_link'] ?? 'https://github.com/monologstorycom-pixel');
+$linkedin = htmlspecialchars($profil['linkedin_link'] ?? 'https://www.linkedin.com/in/rizqi-subagyo-7ab331380');
 $foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https://avatars.githubusercontent.com/u/252295342?v=4';
+
+// --- AMBIL DATA EXPERIENCE ---
+$stmtExp = $pdo->query("SELECT * FROM experiences ORDER BY id DESC");
+$experiences = $stmtExp->fetchAll();
+
+// --- AMBIL DATA PROJECTS ---
+$stmtProj = $pdo->query("SELECT * FROM projects ORDER BY id DESC");
+$projects = $stmtProj->fetchAll();
+
+// --- AMBIL DATA VIDEO ---
+$stmtVid = $pdo->query("SELECT * FROM videos ORDER BY id DESC");
+$videos = $stmtVid->fetchAll();
+
+// --- FUNGSI HELPER: Convert Link YouTube biasa ke format Embed ---
+function getYouTubeEmbed($url) {
+    preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/\s]{11})%i', $url, $match);
+    return isset($match[1]) ? "https://www.youtube.com/embed/" . $match[1] : htmlspecialchars($url);
+}
 ?>
 
 <!DOCTYPE html>
@@ -21,37 +37,14 @@ $foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rizqi Subagyo — IT Support & Full-stack Developer | Pekalongan - Surakarta</title>
-    <meta name="description" content="Rizqi Subagyo — IT Support Specialist & Full-stack Developer berpengalaman di Pekalongan. Ahli MikroTik, Proxmox, Next.js, Python, UniFi, dan sistem monitoring jaringan.">
-    <meta name="keywords" content="Rizqi Subagyo, IT Support Pekalongan, Network Engineer, MikroTik, Full-stack Developer, Next.js, Proxmox, UniFi, rsby.my.id">
-    <meta name="author" content="Rizqi Subagyo">
-    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
-    <meta name="geo.region" content="ID-JT">
-    <meta name="geo.placename" content="Pekalongan">
-    <meta property="og:type" content="profile">
-    <meta property="og:url" content="https://rsby.my.id/">
-    <meta property="og:title" content="Rizqi Subagyo — IT Support & Full-stack Developer">
-    <meta property="og:description" content="Portofolio resmi Rizqi Subagyo. MikroTik, Proxmox, Next.js, Python dari Pekalongan.">
-    <meta property="og:image" content="https://avatars.githubusercontent.com/u/252295342?v=4">
-    <meta property="og:locale" content="id_ID">
-    <meta property="og:site_name" content="rsby.my.id">
-    <meta property="profile:first_name" content="Rizqi">
-    <meta property="profile:last_name" content="Subagyo">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Rizqi Subagyo — IT Support & Full-stack Developer">
-    <meta name="twitter:description" content="Portofolio resmi Rizqi Subagyo.">
-    <meta name="twitter:image" content="https://avatars.githubusercontent.com/u/252295342?v=4">
-    <link rel="canonical" href="https://rsby.my.id/">
-    <link rel="icon" type="image/png" href="https://avatars.githubusercontent.com/u/252295342?v=4">
+    <title><?= $nama ?> — IT Support & Full-stack Developer</title>
+    <meta name="description" content="<?= $nama ?> — <?= $tagline ?>.">
+    <meta name="robots" content="index, follow">
+    <link rel="icon" type="image/png" href="<?= $foto ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-
-    <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"Person","name":"Rizqi Subagyo","url":"https://rsby.my.id","image":"https://avatars.githubusercontent.com/u/252295342?v=4","jobTitle":"IT Support Specialist & Full-stack Developer","description":"Profesional IT di infrastruktur jaringan, server virtualisasi, dan web development.","address":{"@type":"PostalAddress","addressLocality":"Pekalongan","addressRegion":"Jawa Tengah","addressCountry":"ID"},"email":"rizqisubagyo07@gmail.com","sameAs":["https://github.com/monologstorycom-pixel","https://www.linkedin.com/in/rizqi-subagyo-7ab331380"],"knowsAbout":["MikroTik","Proxmox","Docker","UniFi","Next.js","Python","PHP","Linux Server","Network Engineering","IT Support"]}
-    </script>
 
     <style>
         [data-theme="dark"] {
@@ -105,22 +98,12 @@ $foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https
 
         /* ── TOGGLE ── */
         .toggle {
-            position: fixed;
-            top: 18px; right: 18px;
-            z-index: 200;
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 99px;
-            padding: 6px 13px 6px 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text);
-            box-shadow: var(--shadow);
+            position: fixed; top: 18px; right: 18px; z-index: 200;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 99px; padding: 6px 13px 6px 10px;
+            display: flex; align-items: center; gap: 6px; cursor: pointer;
+            font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
+            color: var(--text); box-shadow: var(--shadow);
             transition: border-color 0.2s, color 0.2s;
         }
         .toggle:hover { border-color: var(--border-s); color: var(--text-hi); }
@@ -128,8 +111,6 @@ $foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https
 
         /* ── LAYOUT ── */
         .page { max-width: 980px; margin: 0 auto; padding: 0 20px; }
-
-        /* ── HEADER ── */
         header { padding: 64px 20px 52px; max-width: 980px; margin: 0 auto; }
 
         .hd { display: flex; align-items: flex-start; gap: 28px; }
@@ -140,365 +121,120 @@ $foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https
 
         .av { flex-shrink: 0; position: relative; }
         .av img {
-            width: 120px; height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid var(--border-s);
-            display: block;
-            transition: border-color 0.25s, transform 0.2s;
-            cursor: pointer;
+            width: 120px; height: 120px; border-radius: 50%;
+            object-fit: cover; border: 1px solid var(--border-s);
+            display: block; transition: border-color 0.25s, transform 0.2s; cursor: pointer;
         }
         .av img:hover { transform: scale(1.04); border-color: var(--accent); }
 
-        .lb {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 999;
-            background: rgba(0,0,0,0.82);
-            align-items: center;
-            justify-content: center;
-        }
-        .lb.open { display: flex; animation: lbIn 0.2s ease; }
-        @keyframes lbIn { from{opacity:0} to{opacity:1} }
-        .lb-img {
-            max-width: min(480px, 90vw);
-            max-height: 85vh;
-            border-radius: 14px;
-            object-fit: cover;
-            box-shadow: 0 24px 64px rgba(0,0,0,0.7);
-            animation: lbUp 0.22s ease;
-        }
-        @keyframes lbUp { from{transform:scale(0.93);opacity:0} to{transform:scale(1);opacity:1} }
-        .lb-close {
-            position: absolute;
-            top: 18px; right: 22px;
-            font-size: 28px;
-            color: #fff;
-            cursor: pointer;
-            opacity: 0.65;
-            transition: opacity 0.15s;
-            border: none;
-            background: none;
-            line-height: 1;
-        }
-        .lb-close:hover { opacity: 1; }
         .online {
-            position: absolute;
-            bottom: 3px; right: 3px;
-            width: 11px; height: 11px;
-            border-radius: 50%;
-            background: var(--accent);
-            border: 2px solid var(--bg);
+            position: absolute; bottom: 3px; right: 3px; width: 11px; height: 11px;
+            border-radius: 50%; background: var(--accent); border: 2px solid var(--bg);
             animation: pulse 2.5s ease infinite;
         }
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
 
         .ht { flex: 1; }
-
-        .pre {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 11px;
-            color: var(--text-dim);
-            display: block;
-            margin-bottom: 8px;
-            letter-spacing: 0.04em;
-        }
+        .pre { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); display: block; margin-bottom: 8px; letter-spacing: 0.04em; }
         [data-theme="dark"] .pre { color: var(--accent); }
-
-        h1 {
-            font-size: clamp(1.7rem, 4vw, 2.4rem);
-            font-weight: 600;
-            color: var(--text-head);
-            letter-spacing: -0.03em;
-            line-height: 1.1;
-            margin-bottom: 6px;
-            transition: color 0.25s;
-        }
-
-        /* blinking cursor only in dark */
-        [data-theme="dark"] h1::after {
-            content: '_';
-            color: var(--accent);
-            animation: blink 1s step-end infinite;
-            font-weight: 400;
-        }
+        
+        h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 600; color: var(--text-head); letter-spacing: -0.03em; line-height: 1.1; margin-bottom: 6px; }
+        [data-theme="dark"] h1::after { content: '_'; color: var(--accent); animation: blink 1s step-end infinite; font-weight: 400; }
         @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
 
-        .sub {
-            font-size: 13px;
-            color: var(--text-dim);
-            margin-bottom: 16px;
-        }
-
-        .avail {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 12px;
-            color: var(--accent);
-            margin-bottom: 18px;
-        }
-        .avail-dot {
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: var(--accent);
-            animation: pulse 2.5s ease infinite;
-        }
+        .sub { font-size: 13px; color: var(--text-dim); margin-bottom: 16px; }
+        .avail { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--accent); margin-bottom: 18px; }
+        .avail-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2.5s ease infinite; }
 
         .btns { display: flex; flex-wrap: wrap; gap: 7px; }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 15px;
-            border-radius: 7px;
-            font-size: 12px;
-            font-weight: 500;
-            text-decoration: none;
-            border: 1px solid var(--border);
-            background: var(--card);
-            color: var(--text);
-            transition: all 0.15s;
-        }
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 15px; border-radius: 7px; font-size: 12px; font-weight: 500; text-decoration: none; border: 1px solid var(--border); background: var(--card); color: var(--text); transition: all 0.15s; }
         .btn:hover { border-color: var(--accent); color: var(--text-hi); }
-        .btn-hi {
-            border-color: var(--accent);
-            color: var(--accent);
-            background: var(--accent-bg);
-        }
-        .btn-hi:hover {
-            background: var(--accent);
-            color: var(--bg);
-        }
+        .btn-hi { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+        .btn-hi:hover { background: var(--accent); color: var(--bg); }
 
         /* ── BODY GRID ── */
         hr.sep { border: none; border-top: 1px solid var(--border); }
-
-        .grid {
-            display: grid;
-            grid-template-columns: 220px 1fr;
-        }
-        @media (max-width: 680px) {
-            .grid { grid-template-columns: 1fr; }
-            .sb { border-right: none; border-bottom: 1px solid var(--border); }
-        }
+        .grid { display: grid; grid-template-columns: 220px 1fr; }
+        @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } .sb { border-right: none; border-bottom: 1px solid var(--border); } }
 
         /* ── SIDEBAR ── */
-        .sb {
-            border-right: 1px solid var(--border);
-            padding: 28px 20px;
-        }
-
+        .sb { border-right: 1px solid var(--border); padding: 28px 20px; }
         .sg + .sg { margin-top: 26px; }
-
-        .slabel {
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 10px;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--text-dim);
-            display: block;
-            margin-bottom: 10px;
-        }
-
+        .slabel { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); display: block; margin-bottom: 10px; }
+        
         .tags { display: flex; flex-wrap: wrap; gap: 5px; }
-        .tag {
-            font-size: 11px;
-            padding: 3px 9px;
-            border-radius: 5px;
-            border: 1px solid var(--border);
-            color: var(--text);
-            transition: all 0.15s;
-        }
+        .tag { font-size: 11px; padding: 3px 9px; border-radius: 5px; border: 1px solid var(--border); color: var(--text); transition: all 0.15s; }
         [data-theme="dark"] .tag { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; }
         .tag:hover { border-color: var(--accent); color: var(--accent); }
 
-        /* clients */
         .clients { display: flex; flex-direction: column; gap: 10px; }
         .cl { display: flex; gap: 9px; align-items: flex-start; }
-        .cl-ic {
-            width: 26px; height: 26px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11px;
-            color: var(--text-dim);
-            flex-shrink: 0;
-            transition: border-color 0.15s, color 0.15s;
-        }
+        .cl-ic { width: 26px; height: 26px; border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-dim); flex-shrink: 0; transition: border-color 0.15s, color 0.15s; }
         .cl:hover .cl-ic { border-color: var(--accent); color: var(--accent); }
-        .cl-name {
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--text-hi);
-            text-decoration: none;
-            display: block;
-            line-height: 1.25;
-            transition: color 0.15s;
-        }
+        .cl-name { font-size: 12px; font-weight: 500; color: var(--text-hi); text-decoration: none; display: block; line-height: 1.25; transition: color 0.15s; }
         .cl-name:hover { color: var(--accent); }
         .cl-loc { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
 
-        /* ── RIGHT ── */
+        /* ── RIGHT CONTENT ── */
         .rc { padding: 28px 28px; }
         @media (max-width: 460px) { .rc { padding: 22px 16px; } }
-
         .sec + .sec { margin-top: 36px; }
-
-        .sh {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .sh h2 {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            white-space: nowrap;
-        }
+        .sh { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+        .sh h2 { font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap; }
         .sh-line { flex: 1; height: 1px; background: var(--border); }
 
-        /* timeline */
+        /* ── TIMELINE ── */
         .tl { position: relative; }
-
-        .ti {
-            position: relative;
-            padding-left: 18px;
-            padding-bottom: 24px;
-        }
+        .ti { position: relative; padding-left: 18px; padding-bottom: 24px; }
         .ti:last-child { padding-bottom: 0; }
-        .ti::before {
-            content: '';
-            position: absolute;
-            left: 4px; top: 10px; bottom: 0;
-            width: 1px;
-            background: var(--border);
-        }
+        .ti::before { content: ''; position: absolute; left: 4px; top: 10px; bottom: 0; width: 1px; background: var(--border); }
         .ti:last-child::before { display: none; }
+        .ti-dot { position: absolute; left: 0; top: 5px; width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--border-s); background: var(--card); }
+        .ti-dot.on { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
 
-        .ti-dot {
-            position: absolute;
-            left: 0; top: 5px;
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            border: 1px solid var(--border-s);
-            background: var(--card);
-        }
-        .ti-dot.on {
-            background: var(--accent);
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-bg);
-        }
+        .ti-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+        .ti-title { font-size: 14px; font-weight: 600; color: var(--text-head); line-height: 1.2; }
+        .ti-yr { font-size: 11px; color: var(--text-dim); white-space: nowrap; font-family: 'IBM Plex Mono', monospace; }
+        .ti-co { font-size: 12px; color: var(--accent); font-weight: 500; margin: 3px 0 8px; }
 
-        .ti-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .ti-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-head);
-            line-height: 1.2;
-        }
-        .ti-yr {
-            font-size: 11px;
-            color: var(--text-dim);
-            white-space: nowrap;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-        .ti-co {
-            font-size: 12px;
-            color: var(--accent);
-            font-weight: 500;
-            margin: 3px 0 8px;
-        }
-
-        details.det > summary {
-            list-style: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 12px;
-            color: var(--text-dim);
-            transition: color 0.15s;
-            padding: 2px 0;
-            user-select: none;
-        }
+        details.det > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-dim); transition: color 0.15s; padding: 2px 0; user-select: none; }
         details.det > summary::-webkit-details-marker { display: none; }
         details.det > summary:hover { color: var(--text); }
         details.det > summary .cv { font-size: 9px; transition: transform 0.2s; }
         details.det[open] > summary .cv { transform: rotate(90deg); }
 
         .buls { margin-top: 9px; display: flex; flex-direction: column; gap: 6px; }
-        .bul {
-            display: flex; gap: 8px;
-            font-size: 13px;
-            color: var(--text);
-            line-height: 1.55;
-            align-items: flex-start;
-        }
-        .bd {
-            width: 4px; height: 4px;
-            border-radius: 50%;
-            background: var(--accent);
-            flex-shrink: 0;
-            margin-top: 7px;
-        }
+        .bul { display: flex; gap: 8px; font-size: 13px; color: var(--text); line-height: 1.55; align-items: flex-start; }
+        .bd { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); flex-shrink: 0; margin-top: 7px; }
 
-        /* projects */
-        .pg {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
-            gap: 10px;
-        }
+        /* ── GRID CARDS (PROJECTS & VIDEOS) ── */
+        .pg { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 10px; }
         @media (max-width: 380px) { .pg { grid-template-columns: 1fr; } }
+        
+        .pg-vid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+        @media (max-width: 480px) { .pg-vid { grid-template-columns: 1fr; } }
 
-        .pc {
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 16px;
-            text-decoration: none;
-            display: block;
-            background: var(--card);
-            transition: border-color 0.18s, background 0.18s;
-        }
-        .pc:hover { border-color: var(--accent); background: var(--card-h); }
-
-        .pi {
-            font-size: 16px;
-            color: var(--accent);
-            margin-bottom: 10px;
-            display: block;
-        }
-        .pt {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-head);
-            margin-bottom: 4px;
-            line-height: 1.3;
-        }
+        .pc { border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-decoration: none; display: block; background: var(--card); transition: border-color 0.18s, background 0.18s; }
+        a.pc:hover { border-color: var(--accent); background: var(--card-h); }
+        
+        .pi { font-size: 16px; color: var(--accent); margin-bottom: 10px; display: block; }
+        .pt { font-size: 13px; font-weight: 600; color: var(--text-head); margin-bottom: 4px; line-height: 1.3; }
         .pd { font-size: 12px; color: var(--text-dim); line-height: 1.55; }
 
-        /* footer */
-        footer {
-            text-align: center;
-            padding: 36px 20px 24px;
-            font-size: 12px;
-            color: var(--text-dim);
-            border-top: 1px solid var(--border);
-            margin-top: 56px;
-        }
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px; margin-bottom: 12px; border: 1px solid var(--border-s); background: #000; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+        /* ── FOOTER & LIGHTBOX ── */
+        footer { text-align: center; padding: 36px 20px 24px; font-size: 12px; color: var(--text-dim); border-top: 1px solid var(--border); margin-top: 56px; }
         footer a { color: var(--accent); text-decoration: none; }
-        footer a:hover { text-decoration: underline; }
+        
+        .lb { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.82); align-items: center; justify-content: center; }
+        .lb.open { display: flex; animation: lbIn 0.2s ease; }
+        @keyframes lbIn { from{opacity:0} to{opacity:1} }
+        .lb-img { max-width: min(480px, 90vw); max-height: 85vh; border-radius: 14px; object-fit: cover; box-shadow: 0 24px 64px rgba(0,0,0,0.7); animation: lbUp 0.22s ease; }
+        @keyframes lbUp { from{transform:scale(0.93);opacity:0} to{transform:scale(1);opacity:1} }
+        .lb-close { position: absolute; top: 18px; right: 22px; font-size: 28px; color: #fff; cursor: pointer; opacity: 0.65; transition: opacity 0.15s; border: none; background: none; line-height: 1; }
+        .lb-close:hover { opacity: 1; }
 
         /* fade-in */
         @keyframes fu { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
@@ -518,29 +254,26 @@ $foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https
 <header class="f">
     <div class="hd">
         <div class="av">
-            <img src="https://raw.githubusercontent.com/monologstorycom-pixel/it-jurnal-log/refs/heads/main/unnamed%20(1).jpg"
-                 alt="Foto profil Rizqi Subagyo, IT Support dan Full-stack Developer Pekalongan"
-                 width="120" height="120" loading="eager"
-                 onclick="document.getElementById('lb').classList.add('open')" style="cursor:pointer">
+            <img src="<?= $foto ?>" alt="Foto profil <?= $nama ?>" width="120" height="120" loading="eager" onclick="document.getElementById('lb').classList.add('open')">
             <div class="online" title="Tersedia untuk proyek"></div>
         </div>
         <div class="ht">
-            <span class="pre">// rizqisubagyo07@gmail.com</span>
-            <h1>Rizqi Subagyo</h1>
-            <p class="sub">IT Support Specialist |  Network infrastructure &nbsp;·&nbsp; Full-stack Developer &nbsp;·&nbsp; Pekalongan - Surakarta</p>
+            <span class="pre">// <?= $email ?></span>
+            <h1><?= $nama ?></h1>
+            <p class="sub"><?= $tagline ?></p>
             <div class="avail">
                 <span class="avail-dot"></span>
-                Tersedia untuk proyek baru
+                <?= $status ?>
             </div>
             <div class="btns">
-                <a href="https://github.com/monologstorycom-pixel" target="_blank" rel="noopener" class="btn">
-                    <i class="fab fa-github" aria-hidden="true"></i> GitHub
+                <a href="<?= $github ?>" target="_blank" rel="noopener" class="btn">
+                    <i class="fab fa-github"></i> GitHub
                 </a>
-                <a href="https://www.linkedin.com/in/rizqi-subagyo-7ab331380" target="_blank" rel="noopener" class="btn">
-                    <i class="fab fa-linkedin" aria-hidden="true"></i> LinkedIn
+                <a href="<?= $linkedin ?>" target="_blank" rel="noopener" class="btn">
+                    <i class="fab fa-linkedin"></i> LinkedIn
                 </a>
-                <a href="mailto:rizqisubagyo07@gmail.com" class="btn btn-hi">
-                    <i class="fas fa-paper-plane" aria-hidden="true"></i> Hire Me
+                <a href="mailto:<?= $email ?>" class="btn btn-hi">
+                    <i class="fas fa-paper-plane"></i> Hire Me
                 </a>
             </div>
         </div>
@@ -552,9 +285,7 @@ $foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https
 <div class="page">
     <div class="grid">
 
-        <!-- SIDEBAR -->
         <aside class="sb f d2">
-
             <div class="sg">
                 <span class="slabel">Programming</span>
                 <div class="tags">
@@ -563,7 +294,6 @@ $foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https
                     <span class="tag">PHP</span>
                 </div>
             </div>
-
             <div class="sg">
                 <span class="slabel">Networking</span>
                 <div class="tags">
@@ -575,7 +305,6 @@ $foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https
                     <span class="tag">Ruijie</span>
                 </div>
             </div>
-
             <div class="sg">
                 <span class="slabel">Infrastructure</span>
                 <div class="tags">
@@ -585,63 +314,37 @@ $foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https
                     <span class="tag">Linux</span>
                 </div>
             </div>
-
             <div class="sg">
                 <span class="slabel">Clients</span>
                 <div class="clients">
                     <div class="cl">
-                        <div class="cl-ic"><i class="fas fa-landmark" aria-hidden="true"></i></div>
-                        <div>
-                            <a class="cl-name" href="https://bpkad.pekalongankota.go.id/" target="_blank" rel="noopener">Badan Keuangan Daerah</a>
-                            <div class="cl-loc">Kota Pekalongan</div>
-                        </div>
+                        <div class="cl-ic"><i class="fas fa-landmark"></i></div>
+                        <div><a class="cl-name" href="https://bpkad.pekalongankota.go.id/" target="_blank" rel="noopener">Badan Keuangan Daerah</a><div class="cl-loc">Kota Pekalongan</div></div>
                     </div>
                     <div class="cl">
-                        <div class="cl-ic"><i class="fas fa-clinic-medical" aria-hidden="true"></i></div>
-                        <div>
-                            <a class="cl-name" href="https://www.google.com/maps/place/Klinik+Subekti" target="_blank" rel="noopener">Klinik Kukuh Subekti</a>
-                            <div class="cl-loc">Comal, Pemalang</div>
-                        </div>
+                        <div class="cl-ic"><i class="fas fa-clinic-medical"></i></div>
+                        <div><a class="cl-name" href="#" target="_blank" rel="noopener">Klinik Kukuh Subekti</a><div class="cl-loc">Comal, Pemalang</div></div>
                     </div>
                     <div class="cl">
-                        <div class="cl-ic"><i class="fas fa-industry" aria-hidden="true"></i></div>
-                        <div>
-                            <a class="cl-name" href="https://www.google.com/maps/place/PT+Duta+Albasy" target="_blank" rel="noopener">PT Duta Albasy</a>
-                            <div class="cl-loc">Kajen, Kab. Pekalongan</div>
-                        </div>
+                        <div class="cl-ic"><i class="fas fa-industry"></i></div>
+                        <div><a class="cl-name" href="#" target="_blank" rel="noopener">PT Duta Albasy</a><div class="cl-loc">Kajen, Kab. Pekalongan</div></div>
                     </div>
                     <div class="cl">
-                        <div class="cl-ic"><i class="fas fa-hospital" aria-hidden="true"></i></div>
-                        <div>
-                            <a class="cl-name" href="https://puskeskaranganyar.karanganyarkab.go.id/" target="_blank" rel="noopener">Puskesmas Karanganyar</a>
-                            <div class="cl-loc">Kab. Pekalongan</div>
-                        </div>
+                        <div class="cl-ic"><i class="fas fa-hospital"></i></div>
+                        <div><a class="cl-name" href="https://puskeskaranganyar.karanganyarkab.go.id/" target="_blank" rel="noopener">Puskesmas Karanganyar</a><div class="cl-loc">Kab. Pekalongan</div></div>
                     </div>
                     <div class="cl">
-                        <div class="cl-ic"><i class="fas fa-hospital-alt" aria-hidden="true"></i></div>
-                        <div>
-                            <a class="cl-name" href="https://rsudkajen.pekalongankab.go.id/" target="_blank" rel="noopener">RSUD Kajen</a>
-                            <div class="cl-loc">Kab. Pekalongan</div>
-                        </div>
+                        <div class="cl-ic"><i class="fas fa-hospital-alt"></i></div>
+                        <div><a class="cl-name" href="https://rsudkajen.pekalongankab.go.id/" target="_blank" rel="noopener">RSUD Kajen</a><div class="cl-loc">Kab. Pekalongan</div></div>
                     </div>
                     <div class="cl">
-                        <div class="cl-ic"><i class="fas fa-mug-hot" aria-hidden="true"></i></div>
-                        <div>
-                            <a class="cl-name" href="https://www.instagram.com/loementocaferesto/" target="_blank" rel="noopener">Loemento Cafe Resto</a>
-                            <div class="cl-loc">Kajen, Kab. Pekalongan</div>
-                        </div>
-                    </div>
-                    <div class="cl">
-                        <div class="cl-ic"><i class="fas fa-tshirt" aria-hidden="true"></i></div>
-                        <div>
-                            <a class="cl-name" href="https://www.behaestex.co.id/" target="_blank" rel="noopener">PT Behaestex</a>
-                            <div class="cl-loc">Wonopringgo, Kab. Pekalongan</div>
-                        </div>
+                        <div class="cl-ic"><i class="fas fa-tshirt"></i></div>
+                        <div><a class="cl-name" href="https://www.behaestex.co.id/" target="_blank" rel="noopener">PT Behaestex</a><div class="cl-loc">Wonopringgo, Kab. Pekalongan</div></div>
                     </div>
                 </div>
+            </div>
         </aside>
 
-        <!-- MAIN -->
         <main class="rc f d3">
 
             <section class="sec" aria-labelledby="exp-h">
@@ -649,73 +352,43 @@ $foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https
                     <h2 id="exp-h">Experience</h2>
                     <div class="sh-line"></div>
                 </div>
-
                 <div class="tl">
-
-                    <article class="ti">
-                        <div class="ti-dot on"></div>
-                        <div class="ti-row">
-                            <div class="ti-title">IT Support, Multimedia</div>
-                            <div class="ti-yr">2025 — now</div>
-                        </div>
-                        <div class="ti-co">PT. Auri Steel Metalindo</div>
-                        <div class="buls">
-                            <div class="bul"><div class="bd"></div><span>Mengelola infrastruktur jaringan inti menggunakan MikroTik &amp; Ubiquiti.</span></div>
-                            <div class="bul"><div class="bd"></div><span>Implementasi virtualisasi server dengan Proxmox &amp; Docker untuk layanan internal.</span></div>
-                            <div class="bul"><div class="bd"></div><span>Membangun sistem monitoring custom (RSBY NOC) terintegrasi Hikvision API.</span></div>
-                            <div class="bul"><div class="bd"></div><span>Mendesain aset multimedia</span></div>
-                        </div>
-                    </article>
-
-                    <article class="ti">
-                        <div class="ti-dot"></div>
-                        <div class="ti-row">
-                            <div class="ti-title">IT Support Specialist</div>
-                            <div class="ti-yr">2019 — 2022</div>
-                        </div>
-                        <div class="ti-co">PT FTF Globalindo</div>
-                        <details class="det">
-                            <summary><i class="fas fa-chevron-right cv" aria-hidden="true"></i> Lihat detail</summary>
-                            <div class="buls">
-                                <div class="bul"><div class="bd"></div><span>Berkolaborasi dengan BKD dalam mengelola operasional IT instansi pemerintahan.</span></div>
-                                <div class="bul"><div class="bd"></div><span>Menangani administrasi jaringan untuk memastikan konektivitas dan keamanan sistem.</span></div>
-                                <div class="bul"><div class="bd"></div><span>Mendukung pengembangan aplikasi untuk kebutuhan operasional.</span></div>
+                    <?php if (empty($experiences)): ?>
+                        <p class="text-dim">Belum ada riwayat kerja.</p>
+                    <?php else: ?>
+                        <?php foreach ($experiences as $exp): ?>
+                        <article class="ti">
+                            <div class="ti-dot <?= $exp['is_active'] ? 'on' : '' ?>"></div>
+                            <div class="ti-row">
+                                <div class="ti-title"><?= htmlspecialchars($exp['job_title']) ?></div>
+                                <div class="ti-yr"><?= htmlspecialchars($exp['year_range']) ?></div>
                             </div>
-                        </details>
-                    </article>
-
-                    <article class="ti">
-                        <div class="ti-dot"></div>
-                        <div class="ti-row">
-                            <div class="ti-title">Freelance Photographer</div>
-                            <div class="ti-yr">2017 — 2024</div>
-                        </div>
-                        <div class="ti-co">SELAWAS VISUAL · Pekalongan</div>
-                        <details class="det">
-                            <summary><i class="fas fa-chevron-right cv" aria-hidden="true"></i> Lihat detail</summary>
+                            <div class="ti-co"><?= htmlspecialchars($exp['company']) ?></div>
+                            
+                            <?php if (!$exp['is_active']): ?>
+                                <details class="det">
+                                    <summary><i class="fas fa-chevron-right cv"></i> Lihat detail</summary>
+                            <?php endif; ?>
+                            
                             <div class="buls">
-                                <div class="bul"><div class="bd"></div><span>Layanan fotografi lepas untuk berbagai kebutuhan dokumentasi dan visual.</span></div>
-                                <div class="bul"><div class="bd"></div><span>Editing foto dan penyesuaian warna sesuai permintaan klien.</span></div>
+                                <?php 
+                                $bullets = explode("\n", trim($exp['description']));
+                                foreach ($bullets as $bullet):
+                                    if (trim($bullet) !== ''):
+                                ?>
+                                    <div class="bul"><div class="bd"></div><span><?= htmlspecialchars(trim($bullet)) ?></span></div>
+                                <?php 
+                                    endif;
+                                endforeach; 
+                                ?>
                             </div>
-                        </details>
-                    </article>
 
-                    <article class="ti">
-                        <div class="ti-dot"></div>
-                        <div class="ti-row">
-                            <div class="ti-title">IT Support Specialist</div>
-                            <div class="ti-yr">2017</div>
-                        </div>
-                        <div class="ti-co">detikcom · Jakarta Selatan</div>
-                        <details class="det">
-                            <summary><i class="fas fa-chevron-right cv" aria-hidden="true"></i> Lihat detail</summary>
-                            <div class="buls">
-                                <div class="bul"><div class="bd"></div><span>Dukungan teknis perangkat keras &amp; lunak di lingkungan kerja.</span></div>
-                                <div class="bul"><div class="bd"></div><span>Perbaikan jaringan lokal dan memastikan kelancaran operasional karyawan.</span></div>
-                            </div>
-                        </details>
-                    </article>
-
+                            <?php if (!$exp['is_active']): ?>
+                                </details>
+                            <?php endif; ?>
+                        </article>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </section>
 
@@ -724,39 +397,50 @@ $foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https
                     <h2 id="proj-h">Projects</h2>
                     <div class="sh-line"></div>
                 </div>
-
                 <div class="pg">
-                    <a href="https://webserver.rsby.my.id" target="_blank" rel="noopener" class="pc">
-                        <i class="fas fa-ticket-alt pi" aria-hidden="true"></i>
-                        <div class="pt">E-Ticketing IT Support</div>
-                        <p class="pd">Helpdesk ticketing terintegrasi monitoring jaringan untuk respons insiden lebih cepat.</p>
-                    </a>
-                    <a href="https://log.rsby.my.id" target="_blank" rel="noopener" class="pc">
-                        <i class="fas fa-boxes pi" aria-hidden="true"></i>
-                        <div class="pt">IT Log &amp; Asset Inventory</div>
-                        <p class="pd">Manajemen aset IT dan log harian terpusat dengan riwayat perbaikan lengkap.</p>
-                    </a>
-                    <a href="/slws" target="" rel="noopener" class="pc">
-                        <i class="fas fa-camera pi" aria-hidden="true"></i>
-                        <div class="pt">SELAWAS VISUAL</div>
-                        <p class="pd">Vendor fotografi independen yang dirintis dan dijalankan selama ~10 tahun. Melayani dokumentasi, portrait, dan kebutuhan visual klien.</p>
-                    </a>
-                    
-                    <div class="pc">
-                        <i class="fab fa-telegram pi" aria-hidden="true"></i>
-                        <div class="pt">Auri Connection Hub</div>
-                        <p class="pd">Telegram Bot notifikasi otomatis status jaringan dan CCTV real-time.</p>
-                    </div>
-                    <div class="pc">
-                        <i class="fas fa-store pi" aria-hidden="true"></i>
-                        <div class="pt">POS Web App</div>
-                        <p class="pd">Aplikasi kasir web untuk transaksi, stok, dan pelaporan keuangan harian.</p>
-                    </div>
-                    <div class="pc">
-                        <i class="fas fa-desktop pi" aria-hidden="true"></i>
-                        <div class="pt">RSBY NOC Dashboard</div>
-                        <p class="pd">Dashboard sentral monitoring trafik MikroTik, AP, dan status Hikvision Storage.</p>
-                    </div>
+                    <?php if (empty($projects)): ?>
+                        <p class="text-dim">Belum ada project.</p>
+                    <?php else: ?>
+                        <?php foreach ($projects as $proj): ?>
+                            <?php if (!empty($proj['link_url'])): ?>
+                                <a href="<?= htmlspecialchars($proj['link_url']) ?>" target="_blank" rel="noopener" class="pc">
+                            <?php else: ?>
+                                <div class="pc" style="cursor: default;">
+                            <?php endif; ?>
+
+                                <i class="<?= htmlspecialchars($proj['icon_class']) ?> pi" aria-hidden="true"></i>
+                                <div class="pt"><?= htmlspecialchars($proj['title']) ?></div>
+                                <p class="pd"><?= htmlspecialchars($proj['description']) ?></p>
+
+                            <?php if (!empty($proj['link_url'])): ?>
+                                </a>
+                            <?php else: ?>
+                                </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </section>
+
+            <section class="sec" aria-labelledby="vid-h">
+                <div class="sh">
+                    <h2 id="vid-h">Video Portfolio</h2>
+                    <div class="sh-line"></div>
+                </div>
+                <div class="pg-vid">
+                    <?php if (empty($videos)): ?>
+                        <p class="text-dim">Belum ada video.</p>
+                    <?php else: ?>
+                        <?php foreach ($videos as $vid): ?>
+                        <div class="pc" style="cursor: default; padding: 12px;">
+                            <div class="video-wrapper">
+                                <iframe src="<?= getYouTubeEmbed($vid['video_url']) ?>" allowfullscreen></iframe>
+                            </div>
+                            <div class="pt"><?= htmlspecialchars($vid['title']) ?></div>
+                            <p class="pd" style="margin-top: 4px;"><?= nl2br(htmlspecialchars($vid['description'])) ?></p>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </section>
 
@@ -765,17 +449,12 @@ $foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https
 </div>
 
 <footer>
-    <p>© 2026 Rizqi Subagyo
-       <a href="mailto:rizqisubagyo07@gmail.com"></a></p>
+    <p>© <?= date('Y') ?> <?= $nama ?> <a href="mailto:<?= $email ?>"></a></p>
 </footer>
 
-<!-- LIGHTBOX -->
 <div class="lb" id="lb" onclick="this.classList.remove('open')">
-    <button class="lb-close" onclick="document.getElementById('lb').classList.remove('open')" aria-label="Tutup foto">&times;</button>
-    <img class="lb-img"
-         src="https://raw.githubusercontent.com/monologstorycom-pixel/it-jurnal-log/refs/heads/main/unnamed%20(1).jpg"
-         alt="Foto Rizqi Subagyo"
-         onclick="event.stopPropagation()">
+    <button class="lb-close" onclick="document.getElementById('lb').classList.remove('open')" aria-label="Tutup foto">×</button>
+    <img class="lb-img" src="<?= $foto ?>" alt="Foto <?= $nama ?>" onclick="event.stopPropagation()">
 </div>
 
 <script>
