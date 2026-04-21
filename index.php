@@ -1,3 +1,21 @@
+<?php
+require 'admin/koneksi.php';
+// Ambil data profil
+$stmt = $pdo->query("SELECT * FROM profile_settings LIMIT 1");
+$profil = $stmt->fetch();
+
+// Atur fallback kalau datanya kosong
+$nama = htmlspecialchars($profil['full_name'] ?? 'Rizqi Subagyo');
+$tagline = htmlspecialchars($profil['tagline'] ?? 'IT Support Specialist | Full-stack Developer');
+$status = htmlspecialchars($profil['availability_status'] ?? 'Tersedia');
+$email = htmlspecialchars($profil['email'] ?? 'rizqisubagyo07@gmail.com');
+$github = htmlspecialchars($profil['github_link'] ?? '#');
+$linkedin = htmlspecialchars($profil['linkedin_link'] ?? '#');
+
+// Cek foto
+$foto = !empty($profil['profile_picture']) ? $profil['profile_picture'] : 'https://avatars.githubusercontent.com/u/252295342?v=4';
+?>
+
 <!DOCTYPE html>
 <html lang="id" data-theme="dark">
 <head>
