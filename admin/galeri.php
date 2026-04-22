@@ -43,35 +43,23 @@ if (!$post_size_error && $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['
     $folder      = '../uploads/galeri/';
     if (!is_dir($folder)) mkdir($folder, 0777, true);
 
-    /**
-     * Kompres & resize pakai GD (server-side backup).
-     * Target: ≤ 900KB, max lebar 1920px, kualitas mulai 82 turun sampai 60.
-     */
     function serverCompress($tmp_path, $destination) {
         if (!function_exists('imagecreatefromjpeg') || !function_exists('imagecreatetruecolor')) {
-            // GD tidak aktif — simpan langsung
             return move_uploaded_file($tmp_path, $destination);
         }
-
         $info = @getimagesize($tmp_path);
         if (!$info) return move_uploaded_file($tmp_path, $destination);
-
         [$origW, $origH] = $info;
         $mime = $info['mime'];
-
-        // Buat canvas
         $maxW  = 1920;
         $scale = ($origW > $maxW) ? $maxW / $origW : 1;
         $newW  = (int)round($origW * $scale);
         $newH  = (int)round($origH * $scale);
-
         $canvas = imagecreatetruecolor($newW, $newH);
-
         if ($mime === 'image/jpeg') {
             $src = @imagecreatefromjpeg($tmp_path);
         } elseif ($mime === 'image/png') {
             $src = @imagecreatefrompng($tmp_path);
-            // Flatten PNG transparency ke putih
             $white = imagecolorallocate($canvas, 255, 255, 255);
             imagefill($canvas, 0, 0, $white);
         } elseif ($mime === 'image/webp' && function_exists('imagecreatefromwebp')) {
@@ -80,13 +68,9 @@ if (!$post_size_error && $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['
             imagedestroy($canvas);
             return move_uploaded_file($tmp_path, $destination);
         }
-
         if (!$src) { imagedestroy($canvas); return move_uploaded_file($tmp_path, $destination); }
-
         imagecopyresampled($canvas, $src, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
         imagedestroy($src);
-
-        // Turunkan quality sampai file < 900KB
         $target = 900 * 1024;
         $quality = 82;
         do {
@@ -96,7 +80,6 @@ if (!$post_size_error && $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['
             if (strlen($blob) <= $target || $quality <= 60) break;
             $quality -= 4;
         } while (true);
-
         imagedestroy($canvas);
         return (bool) file_put_contents($destination, $blob);
     }
@@ -105,11 +88,7 @@ if (!$post_size_error && $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['
     $dilewati = 0;
     foreach ($_FILES['fotos']['tmp_name'] as $key => $tmp) {
         if ($_FILES['fotos']['error'][$key] !== UPLOAD_ERR_OK) { $dilewati++; continue; }
-
-        $orig_ext = strtolower(pathinfo($_FILES['fotos']['name'][$key], PATHINFO_EXTENSION));
-        // Output selalu .jpg (hasil compress)
         $fname = 'slws_' . time() . '_' . uniqid() . '.jpg';
-
         if (serverCompress($tmp, $folder . $fname)) {
             $pdo->prepare("INSERT INTO slws_photos (category_id, image_path) VALUES (?,?)")
                 ->execute([$category_id, 'uploads/galeri/' . $fname]);
@@ -118,7 +97,6 @@ if (!$post_size_error && $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['
             $dilewati++;
         }
     }
-
     $msg = "$berhasil foto berhasil diupload & dikompres";
     if ($dilewati > 0) $msg .= " ($dilewati dilewati)";
     $_SESSION['flash_ok'] = $msg;
@@ -134,17 +112,44 @@ if (isset($_GET['pesan'])) {
     if ($_GET['pesan'] == 'dihapus') $pesan = "Foto berhasil dihapus.";
 }
 
-// ── DATA ──
-$kategori   = $pdo->query("SELECT * FROM slws_categories")->fetchAll();
+// ── PAGINATION ──
+$per_page   = 48; // jumlah foto per halaman
+$page_num   = max(1, (int)($_GET['p'] ?? 1));
 $filter_kat = $_GET['kat'] ?? '';
-$q      = "SELECT p.*, c.name AS category_name FROM slws_photos p JOIN slws_categories c ON p.category_id = c.id";
+
+// Count total dulu (query ringan)
+$count_q = "SELECT COUNT(*) FROM slws_photos";
+$count_p = [];
+if ($filter_kat !== '') { $count_q .= " WHERE category_id = ?"; $count_p[] = $filter_kat; }
+$stmt_count = $pdo->prepare($count_q);
+$stmt_count->execute($count_p);
+$total_photos = (int)$stmt_count->fetchColumn();
+$total_pages  = max(1, (int)ceil($total_photos / $per_page));
+$page_num     = min($page_num, $total_pages);
+$offset       = ($page_num - 1) * $per_page;
+
+// Query foto dengan LIMIT+OFFSET — hanya ambil yang ditampilkan
+$q      = "SELECT p.id, p.image_path, c.name AS category_name
+           FROM slws_photos p
+           JOIN slws_categories c ON p.category_id = c.id";
 $params = [];
 if ($filter_kat !== '') { $q .= " WHERE p.category_id = ?"; $params[] = $filter_kat; }
-$q .= " ORDER BY p.id DESC";
-$stmt = $pdo->prepare($q); $stmt->execute($params);
+$q .= " ORDER BY p.id DESC LIMIT ? OFFSET ?";
+$params[] = $per_page;
+$params[] = $offset;
+$stmt = $pdo->prepare($q);
+// Bind types correctly for LIMIT/OFFSET (must be int)
+$stmt->bindValue(count($params) - 1, $per_page, PDO::PARAM_INT);
+$stmt->bindValue(count($params),     $offset,    PDO::PARAM_INT);
+// rebind non-int params
+if ($filter_kat !== '') {
+    $stmt->bindValue(1, $filter_kat);
+}
+$stmt->execute();
 $photos = $stmt->fetchAll();
 
-$server_upload_limit = ini_get('upload_max_filesize') ?: '8M';
+// ── DATA KATEGORI (untuk filter & modal) ──
+$kategori = $pdo->query("SELECT * FROM slws_categories ORDER BY name")->fetchAll();
 
 require '_layout.php';
 ?>
@@ -152,10 +157,14 @@ require '_layout.php';
 <div class="page-head">
   <div class="page-head-left">
     <h2>Galeri Foto</h2>
-    <p><?= count($photos) ?> foto<?= $filter_kat ? ' di kategori ini' : ' total' ?></p>
+    <p>
+      <?= $total_photos ?> foto total
+      <?php if ($filter_kat): ?> · filter aktif<?php endif; ?>
+      · halaman <?= $page_num ?>/<?= $total_pages ?>
+    </p>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-    <form method="GET" style="margin:0">
+    <form method="GET" style="margin:0;display:flex;gap:6px;align-items:center">
       <select name="kat" class="form-control" style="min-width:160px;padding:8px 12px" onchange="this.form.submit()">
         <option value="">Semua Kategori</option>
         <?php foreach ($kategori as $k): ?>
@@ -164,6 +173,7 @@ require '_layout.php';
           </option>
         <?php endforeach; ?>
       </select>
+      <input type="hidden" name="p" value="1">
     </form>
     <button class="btn btn-primary" onclick="openUploadModal()">
       <i class="lucide lucide-upload"></i> Upload Foto
@@ -184,24 +194,74 @@ require '_layout.php';
     <p>Belum ada foto<?= $filter_kat ? ' di kategori ini' : '' ?>.</p>
   </div>
 <?php else: ?>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
+  <!-- FOTO GRID — gambar pakai loading="lazy" native -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px">
     <?php foreach ($photos as $img): ?>
-    <div class="foto-item" style="position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--border);aspect-ratio:4/3;background:var(--surface)">
-      <img src="../<?= htmlspecialchars($img['image_path']) ?>" alt="" loading="lazy"
-           style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s">
-      <div class="foto-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0);display:flex;align-items:center;justify-content:center;transition:all 0.2s;opacity:0">
-        <a href="galeri.php?aksi=hapus&id=<?= $img['id'] ?>&kat=<?= $filter_kat ?>"
+    <div class="foto-item" style="position:relative;border-radius:9px;overflow:hidden;border:1px solid var(--border);aspect-ratio:4/3;background:var(--surface2)">
+      <!-- loading="lazy" + decoding="async" — browser handle, zero JS needed -->
+      <img
+        src="../<?= htmlspecialchars($img['image_path']) ?>"
+        alt="<?= htmlspecialchars($img['category_name']) ?>"
+        loading="lazy"
+        decoding="async"
+        width="310" height="232"
+        style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s;will-change:transform"
+      >
+      <div class="foto-overlay">
+        <a href="galeri.php?aksi=hapus&id=<?= $img['id'] ?>&kat=<?= urlencode($filter_kat) ?>&p=<?= $page_num ?>"
            onclick="return confirm('Hapus foto ini?')"
            class="btn btn-danger btn-sm" style="backdrop-filter:blur(4px)">
           <i class="lucide lucide-trash-2"></i> Hapus
         </a>
       </div>
-      <div style="position:absolute;top:6px;left:6px">
+      <div style="position:absolute;top:5px;left:5px;pointer-events:none">
         <span class="badge badge-dim" style="font-size:9px"><?= htmlspecialchars($img['category_name']) ?></span>
       </div>
     </div>
     <?php endforeach; ?>
   </div>
+
+  <!-- ── PAGINATION ── -->
+  <?php if ($total_pages > 1): ?>
+  <div style="display:flex;justify-content:center;align-items:center;gap:6px;margin-top:24px;flex-wrap:wrap">
+    <?php
+    // Prev
+    if ($page_num > 1):
+        $prev_url = '?kat=' . urlencode($filter_kat) . '&p=' . ($page_num - 1);
+    ?>
+      <a href="<?= $prev_url ?>" class="btn btn-ghost btn-sm"><i class="lucide lucide-chevron-left"></i></a>
+    <?php endif; ?>
+
+    <?php
+    // Page numbers: show max 7 buttons with ellipsis
+    $range = 2;
+    for ($i = 1; $i <= $total_pages; $i++):
+      $show = ($i == 1 || $i == $total_pages || abs($i - $page_num) <= $range);
+      $ellipsis_before = ($i == $page_num - $range - 1 && $i > 1);
+      $ellipsis_after  = ($i == $page_num + $range + 1 && $i < $total_pages);
+      if ($ellipsis_before || $ellipsis_after):
+    ?>
+        <span style="color:var(--text-dim);padding:0 4px">…</span>
+    <?php
+      endif;
+      if (!$show) continue;
+      $url = '?kat=' . urlencode($filter_kat) . '&p=' . $i;
+    ?>
+      <a href="<?= $url ?>" class="btn btn-sm <?= $i == $page_num ? 'btn-primary' : 'btn-ghost' ?>"
+         style="min-width:34px;justify-content:center"><?= $i ?></a>
+    <?php endfor; ?>
+
+    <?php if ($page_num < $total_pages):
+        $next_url = '?kat=' . urlencode($filter_kat) . '&p=' . ($page_num + 1);
+    ?>
+      <a href="<?= $next_url ?>" class="btn btn-ghost btn-sm"><i class="lucide lucide-chevron-right"></i></a>
+    <?php endif; ?>
+  </div>
+  <div style="text-align:center;font-size:11px;color:var(--text-dim);margin-top:10px;font-family:var(--mono)">
+    Menampilkan <?= (($page_num-1)*$per_page)+1 ?>–<?= min($page_num*$per_page, $total_photos) ?> dari <?= $total_photos ?> foto
+  </div>
+  <?php endif; ?>
+
 <?php endif; ?>
 
 <!-- ── UPLOAD MODAL ── -->
@@ -216,13 +276,11 @@ require '_layout.php';
         <div class="alert alert-danger"><span>⚠</span> Buat kategori terlebih dahulu!</div>
       <?php else: ?>
 
-        <!-- Info bar -->
         <div style="display:flex;align-items:flex-start;gap:8px;padding:11px 14px;background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.18);border-radius:8px;margin-bottom:18px;font-size:12px;color:var(--green);line-height:1.6">
           <i class="lucide lucide-sparkles" style="font-size:15px;margin-top:1px;flex-shrink:0"></i>
           <div>
-            <strong>Auto Kompres Aktif</strong> — Setiap foto dikompres di browser kamu <em>sebelum</em> diupload
-            sehingga ukurannya di bawah <strong>900KB</strong>. File asli tidak berubah.
-            Server juga mengkompres ulang sebagai backup.
+            <strong>Auto Kompres Aktif</strong> — Setiap foto dikompres di browser <em>sebelum</em> diupload,
+            ukuran di bawah <strong>900KB</strong>. File asli tidak berubah.
           </div>
         </div>
 
@@ -245,13 +303,11 @@ require '_layout.php';
                  onchange="previewFiles(this)">
         </div>
 
-        <!-- Preview & progress list -->
         <div id="preview-list" style="display:none;margin-top:4px">
           <div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;font-family:var(--mono)" id="preview-summary"></div>
           <div id="preview-items" style="display:flex;flex-wrap:wrap;gap:8px"></div>
         </div>
 
-        <!-- Upload progress bar -->
         <div id="upload-progress" style="display:none;margin-top:16px">
           <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:6px">
             <span id="progress-label">Mengkompres & mengupload...</span>
@@ -279,16 +335,24 @@ require '_layout.php';
 </div><!-- .main -->
 
 <style>
+/* Hover foto */
 .foto-item:hover img { transform: scale(1.05); }
-.foto-item:hover .foto-overlay { opacity: 1 !important; background: rgba(0,0,0,0.5) !important; }
+.foto-overlay {
+  position: absolute; inset: 0;
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s, opacity 0.2s;
+  opacity: 0;
+}
+.foto-item:hover .foto-overlay { opacity: 1; background: rgba(0,0,0,0.48); }
+
+/* Preview thumbnail di modal upload */
 .preview-thumb {
-  width: 72px; height: 72px; object-fit: cover;
+  width: 70px; height: 70px; object-fit: cover;
   border-radius: 7px; border: 1px solid var(--border);
   display: block;
 }
-.preview-card {
-  position: relative; text-align: center;
-}
+.preview-card { position: relative; text-align: center; }
 .preview-card .size-badge {
   position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%);
   background: rgba(0,0,0,0.65); color: #fff;
@@ -303,46 +367,40 @@ require '_layout.php';
 </style>
 
 <script>
-function toggleSidebar(){document.getElementById('sidebar').classList.toggle('mobile-open');document.getElementById('overlay').classList.toggle('show')}
-function closeSidebar(){document.getElementById('sidebar').classList.remove('mobile-open');document.getElementById('overlay').classList.remove('show')}
-function openUploadModal(){ document.getElementById('modal-upload').classList.add('open'); }
-function closeUploadModal(){ document.getElementById('modal-upload').classList.remove('open'); }
-document.getElementById('modal-upload').addEventListener('click',function(e){ if(e.target===this) closeUploadModal(); });
+function openUploadModal()  { document.getElementById('modal-upload').classList.add('open'); }
+function closeUploadModal() { document.getElementById('modal-upload').classList.remove('open'); }
+document.getElementById('modal-upload').addEventListener('click', function(e){ if(e.target===this) closeUploadModal(); });
 
-// ── State ──
-let compressedFiles = []; // Array of {name, blob} setelah kompres
-
-const TARGET_SIZE = 900 * 1024; // 900 KB
+// ── Compress helpers ──
+let compressedFiles = [];
+const TARGET_SIZE = 900 * 1024;
 const MAX_WIDTH   = 1920;
 
 function fmtSize(bytes) {
-  if (bytes < 1024) return bytes + 'B';
-  if (bytes < 1024*1024) return (bytes/1024).toFixed(0) + 'KB';
-  return (bytes/(1024*1024)).toFixed(1) + 'MB';
+  if (bytes < 1024)       return bytes + 'B';
+  if (bytes < 1048576)    return (bytes/1024).toFixed(0) + 'KB';
+  return (bytes/1048576).toFixed(1) + 'MB';
 }
 
-// Kompres 1 File pakai Canvas
 function compressFile(file) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = e => {
       const img = new Image();
-      img.onload = function() {
+      img.onload = () => {
         let w = img.width, h = img.height;
         if (w > MAX_WIDTH) { h = Math.round(h * MAX_WIDTH / w); w = MAX_WIDTH; }
-
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         const ctx = canvas.getContext('2d');
-        // Flatten ke putih (untuk PNG transparan)
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, w, h);
         ctx.drawImage(img, 0, 0, w, h);
-
-        // Iterasi turunkan quality sampai < 900KB
+        // Release image memory
+        img.src = '';
         let quality = 0.82;
-        function tryCompress() {
-          canvas.toBlob(function(blob) {
+        (function tryCompress() {
+          canvas.toBlob(blob => {
             if (!blob) { resolve({ blob: null, origSize: file.size, finalSize: 0 }); return; }
             if (blob.size <= TARGET_SIZE || quality <= 0.55) {
               resolve({ blob, origSize: file.size, finalSize: blob.size });
@@ -351,8 +409,7 @@ function compressFile(file) {
               tryCompress();
             }
           }, 'image/jpeg', quality);
-        }
-        tryCompress();
+        })();
       };
       img.src = e.target.result;
     };
@@ -363,7 +420,8 @@ function compressFile(file) {
 async function previewFiles(input) {
   const files = Array.from(input.files);
   if (!files.length) return;
-
+  // Revoke old object URLs to free memory
+  document.querySelectorAll('#preview-items img').forEach(el => URL.revokeObjectURL(el.src));
   compressedFiles = [];
   document.getElementById('preview-items').innerHTML = '';
   document.getElementById('preview-list').style.display = 'block';
@@ -371,39 +429,32 @@ async function previewFiles(input) {
   document.getElementById('btn-upload').disabled = true;
 
   let totalOrig = 0, totalFinal = 0;
-
   for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const result = await compressFile(file);
+    const result = await compressFile(files[i]);
     if (!result.blob) continue;
-
     totalOrig  += result.origSize;
     totalFinal += result.finalSize;
-
-    const url  = URL.createObjectURL(result.blob);
+    const url     = URL.createObjectURL(result.blob);
     const reduced = Math.round((1 - result.finalSize / result.origSize) * 100);
-
-    const card = document.createElement('div');
+    const card    = document.createElement('div');
     card.className = 'preview-card';
     card.innerHTML = `
-      <img src="${url}" class="preview-thumb" alt="">
+      <img src="${url}" class="preview-thumb" alt="" loading="lazy">
       ${reduced > 0 ? `<span class="compress-badge">-${reduced}%</span>` : ''}
       <span class="size-badge">${fmtSize(result.finalSize)}</span>
     `;
     document.getElementById('preview-items').appendChild(card);
-
-    compressedFiles.push({ name: file.name, blob: result.blob });
+    compressedFiles.push({ name: files[i].name, blob: result.blob });
   }
-
-  const savedPct = Math.round((1 - totalFinal / totalOrig) * 100);
+  const savedPct = totalOrig > 0 ? Math.round((1 - totalFinal / totalOrig) * 100) : 0;
   document.getElementById('preview-summary').textContent =
-    `${compressedFiles.length} foto siap diupload — ${fmtSize(totalOrig)} → ${fmtSize(totalFinal)} (hemat ${savedPct}%)`;
+    `${compressedFiles.length} foto siap — ${fmtSize(totalOrig)} → ${fmtSize(totalFinal)} (hemat ${savedPct}%)`;
   document.getElementById('btn-upload').disabled = (compressedFiles.length === 0);
 }
 
 async function startUpload() {
   const catId = document.getElementById('sel-category').value;
-  if (!catId) { alert('Pilih kategori dulu!'); return; }
+  if (!catId)              { alert('Pilih kategori dulu!'); return; }
   if (!compressedFiles.length) { alert('Pilih foto dulu!'); return; }
 
   document.getElementById('btn-upload').disabled = true;
@@ -416,31 +467,24 @@ async function startUpload() {
   const total = compressedFiles.length;
   let done = 0;
 
-  // Upload satu per satu pakai fetch agar bisa track progress
   for (const f of compressedFiles) {
     label.textContent = `Mengupload ${f.name}... (${done+1}/${total})`;
-
     const fd = new FormData();
     fd.append('category_id', catId);
     fd.append('fotos[]', f.blob, f.name.replace(/\.[^.]+$/, '') + '.jpg');
-
-    try {
-      await fetch('galeri.php', { method: 'POST', body: fd });
-    } catch(err) {
-      console.warn('Upload gagal:', f.name, err);
-    }
-
+    try { await fetch('galeri.php', { method: 'POST', body: fd }); }
+    catch(err) { console.warn('Upload gagal:', f.name, err); }
     done++;
     const p = Math.round(done / total * 100);
     bar.style.width = p + '%';
-    pct.textContent = p + '%';
+    pct.textContent  = p + '%';
   }
 
-  label.textContent = '✓ Semua selesai! Memuat ulang...';
+  label.textContent = '✓ Selesai! Memuat ulang...';
   bar.style.background = 'var(--green)';
-  setTimeout(() => {
-    window.location.href = 'galeri.php?kat=' + catId;
-  }, 800);
+  // Revoke all object URLs before redirect
+  document.querySelectorAll('#preview-items img').forEach(el => URL.revokeObjectURL(el.src));
+  setTimeout(() => { window.location.href = 'galeri.php?kat=' + encodeURIComponent(catId); }, 700);
 }
 </script>
 </body>

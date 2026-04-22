@@ -1,6 +1,5 @@
 <?php
 // _layout.php — shared header + sidebar
-// Usage: require '_layout.php'; at top of each admin page
 // Set $page_title and $active_menu before requiring.
 
 if (!isset($_SESSION['admin_logged_in'])) {
@@ -21,17 +20,25 @@ $menu_visual = [
 ];
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= $page_title ?? 'Admin' ?> — Panel</title>
+
+<!-- Preconnect only, fonts load async to avoid render-blocking -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link href="https://unpkg.com/lucide-static@latest/font/lucide.css" rel="stylesheet">
+<link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet"></noscript>
+
+<!-- Lucide icons as inline SVG sprite via CSS — no external font file -->
+<link rel="preload" href="https://unpkg.com/lucide-static@latest/font/lucide.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://unpkg.com/lucide-static@latest/font/lucide.css" rel="stylesheet"></noscript>
+
 <style>
-:root {
+/* ── THEMES ── */
+[data-theme="dark"] {
   --bg:       #0a0c0f;
   --bg2:      #0f1115;
   --surface:  #141720;
@@ -47,9 +54,30 @@ $menu_visual = [
   --green:    #34d399;
   --amber:    #fbbf24;
   --red:      #f87171;
+  --shadow:   0 4px 24px rgba(0,0,0,0.5);
+}
+[data-theme="light"] {
+  --bg:       #f4f6fb;
+  --bg2:      #edf0f7;
+  --surface:  #ffffff;
+  --surface2: #e8ecf5;
+  --border:   rgba(0,0,0,0.08);
+  --border2:  rgba(0,0,0,0.14);
+  --text:     #4a5568;
+  --text-hi:  #1a202c;
+  --text-dim: #a0aec0;
+  --accent:   #3b74e0;
+  --accent2:  #2c5fcb;
+  --accent-g: linear-gradient(135deg, #3b74e0, #9061f9);
+  --green:    #10b981;
+  --amber:    #f59e0b;
+  --red:      #ef4444;
+  --shadow:   0 4px 24px rgba(0,0,0,0.08);
+}
+
+:root {
   --r:        10px;
   --r2:       7px;
-  --shadow:   0 4px 24px rgba(0,0,0,0.5);
   --sidebar:  220px;
   --font:     'Geist', system-ui, sans-serif;
   --mono:     'Geist Mono', monospace;
@@ -64,11 +92,30 @@ body {
   min-height: 100vh;
   line-height: 1.6;
   display: flex;
+  /* GPU-accelerate background transitions */
+  transition: background 0.2s, color 0.2s;
+  will-change: background;
 }
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+
+/* ── THEME TOGGLE BUTTON ── */
+.theme-toggle {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 99px;
+  padding: 5px 10px;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 500;
+  color: var(--text); font-family: var(--font);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.theme-toggle:hover { color: var(--text-hi); border-color: var(--accent); }
+.theme-toggle i { font-size: 12px; }
 
 /* ── SIDEBAR ── */
 .sidebar {
@@ -81,7 +128,7 @@ body {
   position: fixed;
   top: 0; left: 0;
   z-index: 100;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, background 0.2s, border-color 0.2s;
 }
 
 .sb-logo {
@@ -130,6 +177,9 @@ body {
   color: var(--accent);
   font-weight: 500;
 }
+[data-theme="light"] .sb-link.active {
+  background: rgba(59,116,224,0.1);
+}
 .sb-link.active::before {
   content: '';
   position: absolute; left: 0; top: 25%; bottom: 25%;
@@ -167,13 +217,14 @@ body {
 
 .topbar {
   height: 52px;
-  background: rgba(10,12,15,0.8);
-  backdrop-filter: blur(12px);
+  background: var(--bg2);
   border-bottom: 1px solid var(--border);
   display: flex; align-items: center;
   padding: 0 24px;
   gap: 12px;
   position: sticky; top: 0; z-index: 50;
+  transition: background 0.2s, border-color 0.2s;
+  /* Remove backdrop-filter — it's expensive on scroll */
 }
 .topbar-title { font-size: 14px; font-weight: 600; color: var(--text-hi); }
 .topbar-breadcrumb { font-size: 11px; color: var(--text-dim); font-family: var(--mono); margin-left: 2px; }
@@ -196,6 +247,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--r);
   overflow: hidden;
+  transition: background 0.2s, border-color 0.2s;
 }
 .card-body { padding: 20px; }
 .card-header {
@@ -213,6 +265,7 @@ body {
   border-radius: var(--r);
   padding: 18px 20px;
   position: relative; overflow: hidden;
+  transition: background 0.2s, border-color 0.2s;
 }
 .stat-card::before {
   content: '';
@@ -270,7 +323,7 @@ thead th {
 }
 tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
 tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: rgba(255,255,255,0.02); }
+tbody tr:hover td { background: rgba(128,128,128,0.04); }
 .td-action { display: flex; gap: 6px; }
 
 /* BADGE */
@@ -380,7 +433,29 @@ textarea.form-control { resize: vertical; min-height: 90px; }
 /* ANIM */
 @keyframes fu { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
 .fade-in { animation: fu 0.35s ease both; }
+
+/* ── LIGHT MODE OVERRIDES ── */
+[data-theme="light"] .sb-link.active { background: rgba(59,116,224,0.1); }
+[data-theme="light"] .badge-green { background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.25); }
+[data-theme="light"] .badge-dim { background: var(--surface2); color: var(--text-dim); }
+[data-theme="light"] .badge-blue { background: rgba(59,116,224,0.08); color: var(--accent); border-color: rgba(59,116,224,0.2); }
+[data-theme="light"] .btn-warn { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.25); }
+[data-theme="light"] .btn-danger { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.2); }
+[data-theme="light"] .alert-success { background: rgba(16,185,129,0.07); border-color: rgba(16,185,129,0.2); }
+[data-theme="light"] .alert-danger { background: rgba(239,68,68,0.07); border-color: rgba(239,68,68,0.2); }
+[data-theme="light"] tbody tr:hover td { background: rgba(0,0,0,0.02); }
+[data-theme="light"] .modal-backdrop { background: rgba(0,0,0,0.45); }
 </style>
+
+<!-- Apply saved theme BEFORE render — avoids flash -->
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('admin_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  } catch(e){}
+})();
+</script>
 </head>
 <body>
 
@@ -438,10 +513,51 @@ textarea.form-control { resize: vertical; min-height: 90px; }
     <span class="topbar-title"><?= $page_title ?? 'Dashboard' ?></span>
     <span class="topbar-breadcrumb">/ <?= $active_menu ?? 'home' ?></span>
     <div class="topbar-right">
+      <!-- ── DARK / LIGHT TOGGLE ── -->
+      <button class="theme-toggle" id="themeBtn" onclick="toggleAdminTheme()" aria-label="Toggle tema">
+        <i class="lucide lucide-sun" id="themeIcon"></i>
+        <span id="themeLabel">Light</span>
+      </button>
       <a href="../index.php" target="_blank" class="btn btn-ghost btn-sm" style="gap:5px">
         <i class="lucide lucide-external-link"></i> Lihat Website
       </a>
     </div>
   </div>
   <div class="content fade-in">
-<?php // content starts here — each page closes </div></div></body></html>
+<?php
+// content starts here — each page closes </div></div></body></html>
+// Script below is echoed so it appears in the <body> before .content
+echo <<<'SCRIPT'
+<script>
+/* ── SIDEBAR ── */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+/* ── THEME ── */
+function _applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  var icon  = document.getElementById('themeIcon');
+  var label = document.getElementById('themeLabel');
+  if (icon)  icon.className  = t === 'dark' ? 'lucide lucide-sun' : 'lucide lucide-moon';
+  if (label) label.textContent = t === 'dark' ? 'Light' : 'Dark';
+  try { localStorage.setItem('admin_theme', t); } catch(e){}
+}
+function toggleAdminTheme() {
+  var cur = document.documentElement.getAttribute('data-theme') || 'dark';
+  _applyTheme(cur === 'dark' ? 'light' : 'dark');
+}
+(function(){
+  try {
+    var t = localStorage.getItem('admin_theme') || 'dark';
+    _applyTheme(t);
+  } catch(e){}
+})();
+</script>
+SCRIPT;
+?>
