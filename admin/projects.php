@@ -1,193 +1,156 @@
 <?php
 require 'koneksi.php';
+$page_title  = 'Projects';
+$active_menu = 'projects';
 
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: login.php");
-    exit;
-}
-
-$aksi = $_GET['aksi'] ?? 'tampil';
+$aksi = $_GET['aksi'] ?? '';
 $pesan = '';
 
 if ($aksi == 'hapus' && isset($_GET['id'])) {
-    $stmt = $pdo->prepare("DELETE FROM projects WHERE id = ?");
-    $stmt->execute([$_GET['id']]);
-    header("Location: projects.php?pesan=dihapus");
-    exit;
+    $pdo->prepare("DELETE FROM projects WHERE id = ?")->execute([$_GET['id']]);
+    header("Location: projects.php?pesan=dihapus"); exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $title = $_POST['title'];
+    $title       = $_POST['title'];
     $description = $_POST['description'];
-    $icon_class = $_POST['icon_class'];
-    $link_url = $_POST['link_url'];
+    $icon_class  = $_POST['icon_class'];
+    $link_url    = $_POST['link_url'];
 
-    if (isset($_POST['id']) && $_POST['id'] != '') {
-        // PROSES EDIT
-        $stmt = $pdo->prepare("UPDATE projects SET title=?, description=?, icon_class=?, link_url=? WHERE id=?");
-        $stmt->execute([$title, $description, $icon_class, $link_url, $_POST['id']]);
+    if (!empty($_POST['id'])) {
+        $pdo->prepare("UPDATE projects SET title=?, description=?, icon_class=?, link_url=? WHERE id=?")
+            ->execute([$title, $description, $icon_class, $link_url, $_POST['id']]);
         header("Location: projects.php?pesan=diedit");
     } else {
-        // PROSES TAMBAH
-        $stmt = $pdo->prepare("INSERT INTO projects (title, description, icon_class, link_url) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$title, $description, $icon_class, $link_url]);
+        $pdo->prepare("INSERT INTO projects (title, description, icon_class, link_url) VALUES (?,?,?,?)")
+            ->execute([$title, $description, $icon_class, $link_url]);
         header("Location: projects.php?pesan=ditambah");
     }
     exit;
 }
 
-if (isset($_GET['pesan'])) {
-    if ($_GET['pesan'] == 'ditambah') $pesan = "Project baru berhasil ditambahkan!";
-    if ($_GET['pesan'] == 'dihapus') $pesan = "Project berhasil dihapus!";
-    if ($_GET['pesan'] == 'diedit') $pesan = "Project berhasil diperbarui!";
-}
+$map = ['ditambah'=>'Project berhasil ditambahkan!','dihapus'=>'Project berhasil dihapus.','diedit'=>'Project berhasil diperbarui!'];
+if (isset($_GET['pesan'])) $pesan = $map[$_GET['pesan']] ?? '';
 
-$stmt = $pdo->query("SELECT * FROM projects ORDER BY id DESC");
-$projects = $stmt->fetchAll();
+$projects = $pdo->query("SELECT * FROM projects ORDER BY id DESC")->fetchAll();
+require '_layout.php';
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Kelola Projects - Admin</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .sidebar { min-height: 100vh; background-color: #212529; }
-        .sidebar a { color: #adb5bd; text-decoration: none; padding: 12px 20px; display: block; }
-        .sidebar a:hover, .sidebar a.active { background-color: #343a40; color: #fff; border-left: 4px solid #198754; }
-    </style>
-</head>
-<body class="bg-light">
 
-<div class="d-flex">
-    <div class="sidebar text-white" style="width: 250px;">
-        <div class="p-3 text-center border-bottom border-secondary mb-3">
-            <h5 class="m-0">Admin Panel</h5>
-            <small class="text-success">Online</small>
-        </div>
-        <a href="index.php"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
-        <a href="profil.php"><i class="fas fa-user-edit me-2"></i> Pengaturan Profil</a>
-        <a href="experience.php"><i class="fas fa-briefcase me-2"></i> Kelola Experience</a>
-        <a href="projects.php" class="active"><i class="fas fa-project-diagram me-2"></i> Kelola Projects</a>
-        <div class="px-3 mt-4 mb-2 text-muted"><small>SELAWAS VISUAL</small></div>
-        <a href="kategori.php"><i class="fas fa-folder me-2"></i> Kategori Foto</a>
-        <a href="galeri.php"><i class="fas fa-images me-2"></i> Galeri Foto</a>
-        <a href="logout.php" class="text-danger mt-5"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
-    </div>
-
-    <div class="flex-grow-1 p-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4>Kelola Projects</h4>
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalTambah"><i class="fas fa-plus"></i> Tambah Project</button>
-        </div>
-        <hr>
-
-        <?php if ($pesan): ?>
-            <div class="alert alert-success"><?= $pesan ?></div>
-        <?php endif; ?>
-
-        <div class="card shadow-sm border-0">
-            <div class="card-body p-0">
-                <table class="table table-hover m-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Icon</th>
-                            <th>Nama Project</th>
-                            <th>Deskripsi</th>
-                            <th>Link URL</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($projects as $proj): ?>
-                        <tr>
-                            <td class="text-center fs-4 text-primary"><i class="<?= htmlspecialchars($proj['icon_class']) ?>"></i></td>
-                            <td><strong><?= htmlspecialchars($proj['title']) ?></strong></td>
-                            <td><small><?= htmlspecialchars($proj['description']) ?></small></td>
-                            <td>
-                                <?php if($proj['link_url']): ?>
-                                    <a href="<?= htmlspecialchars($proj['link_url']) ?>" target="_blank" class="btn btn-sm btn-outline-info">Buka Link</a>
-                                <?php else: ?>
-                                    <span class="text-muted">-</span>
-                                <?php endif; ?>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-warning text-dark" onclick="editData(<?= $proj['id'] ?>, '<?= htmlspecialchars(addslashes($proj['title'])) ?>', '<?= htmlspecialchars(addslashes($proj['icon_class'])) ?>', '<?= htmlspecialchars(addslashes($proj['link_url'])) ?>', `<?= htmlspecialchars(addslashes($proj['description'])) ?>`)"><i class="fas fa-edit"></i></button>
-                                <a href="projects.php?aksi=hapus&id=<?= $proj['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus project ini?')"><i class="fas fa-trash"></i></a>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                        <?php if(empty($projects)): ?>
-                            <tr><td colspan="5" class="text-center py-3">Belum ada data project.</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+<div class="page-head">
+  <div class="page-head-left">
+    <h2>Projects</h2>
+    <p>Kelola kartu project di halaman depan</p>
+  </div>
+  <button class="btn btn-primary" onclick="openModal()">
+    <i class="lucide lucide-plus"></i> Tambah
+  </button>
 </div>
 
-<div class="modal fade" id="modalForm" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form method="POST">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalTitle">Tambah Project</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-          <input type="hidden" name="id" id="edit_id">
-          <div class="mb-3">
-              <label>Nama Project</label>
-              <input type="text" name="title" id="edit_title" class="form-control" required>
-          </div>
-          <div class="mb-3">
-              <label>Icon Class (FontAwesome)</label>
-              <input type="text" name="icon_class" id="edit_icon" class="form-control" required>
-          </div>
-          <div class="mb-3">
-              <label>Link URL (Opsional)</label>
-              <input type="text" name="link_url" id="edit_link" class="form-control">
-          </div>
-          <div class="mb-3">
-              <label>Deskripsi Singkat</label>
-              <textarea name="description" id="edit_desc" class="form-control" rows="3" required></textarea>
-          </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-        <button type="submit" class="btn btn-success">Simpan Project</button>
-      </div>
-      </form>
-    </div>
+<?php if ($pesan): ?><div class="alert alert-success"><span>✓</span> <?= $pesan ?></div><?php endif; ?>
+
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:50px">Icon</th>
+          <th>Project</th>
+          <th>Deskripsi</th>
+          <th>Link</th>
+          <th style="width:100px">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php if (empty($projects)): ?>
+          <tr><td colspan="5"><div class="empty-box"><i class="lucide lucide-folder-open"></i><p>Belum ada project.</p></div></td></tr>
+        <?php else: ?>
+          <?php foreach ($projects as $p): ?>
+          <tr>
+            <td style="text-align:center"><i class="<?= htmlspecialchars($p['icon_class']) ?>" style="font-size:18px;color:var(--accent)"></i></td>
+            <td style="font-weight:500;color:var(--text-hi)"><?= htmlspecialchars($p['title']) ?></td>
+            <td style="color:var(--text-dim);font-size:12px;max-width:200px"><?= htmlspecialchars($p['description']) ?></td>
+            <td>
+              <?php if ($p['link_url']): ?>
+                <a href="<?= htmlspecialchars($p['link_url']) ?>" target="_blank" class="btn btn-ghost btn-sm" style="gap:4px">
+                  <i class="lucide lucide-external-link"></i> Buka
+                </a>
+              <?php else: ?>
+                <span style="color:var(--text-dim);font-size:12px">—</span>
+              <?php endif; ?>
+            </td>
+            <td>
+              <div class="td-action">
+                <button class="btn btn-warn btn-sm btn-icon" onclick="editData(<?= $p['id'] ?>, '<?= htmlspecialchars(addslashes($p['title'])) ?>', '<?= htmlspecialchars(addslashes($p['icon_class'])) ?>', '<?= htmlspecialchars(addslashes($p['link_url'])) ?>', `<?= addslashes(htmlspecialchars($p['description'])) ?>`)">
+                  <i class="lucide lucide-pencil"></i>
+                </button>
+                <a href="projects.php?aksi=hapus&id=<?= $p['id'] ?>" class="btn btn-danger btn-sm btn-icon" onclick="return confirm('Hapus project ini?')">
+                  <i class="lucide lucide-trash-2"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          <?php endforeach; ?>
+        <?php endif; ?>
+      </tbody>
+    </table>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    function editData(id, title, icon, link, desc) {
-        document.getElementById('modalTitle').innerText = 'Edit Project';
-        document.getElementById('edit_id').value = id;
-        document.getElementById('edit_title').value = title;
-        document.getElementById('edit_icon').value = icon;
-        document.getElementById('edit_link').value = link;
-        document.getElementById('edit_desc').value = desc;
-        
-        var modal = new bootstrap.Modal(document.getElementById('modalForm'));
-        modal.show();
-    }
+<!-- MODAL -->
+<div class="modal-backdrop" id="modal-bd">
+  <div class="modal">
+    <form method="POST">
+      <div class="modal-header">
+        <span class="modal-title" id="modal-title">Tambah Project</span>
+        <button type="button" class="modal-close" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" name="id" id="f-id">
+        <div class="form-group">
+          <label class="form-label">Nama Project</label>
+          <input type="text" name="title" id="f-title" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Icon Class (FontAwesome / Lucide)</label>
+          <input type="text" name="icon_class" id="f-icon" class="form-control" placeholder="fas fa-server">
+          <div class="form-sub">Contoh: fas fa-server, fas fa-database, fas fa-network-wired</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Link URL (opsional)</label>
+          <input type="text" name="link_url" id="f-link" class="form-control" placeholder="https://...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Deskripsi Singkat</label>
+          <textarea name="description" id="f-desc" class="form-control" rows="3" required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost" onclick="closeModal()">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
 
-    document.querySelector('[data-bs-target="#modalTambah"]').addEventListener('click', function() {
-        document.getElementById('modalTitle').innerText = 'Tambah Project';
-        document.getElementById('edit_id').value = '';
-        document.getElementById('edit_title').value = '';
-        document.getElementById('edit_icon').value = '';
-        document.getElementById('edit_link').value = '';
-        document.getElementById('edit_desc').value = '';
-        var modal = new bootstrap.Modal(document.getElementById('modalForm'));
-        modal.show();
-    });
+</div></div>
+<script>
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('mobile-open');document.getElementById('overlay').classList.toggle('show')}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('mobile-open');document.getElementById('overlay').classList.remove('show')}
+function openModal(){
+  document.getElementById('modal-title').textContent='Tambah Project';
+  ['f-id','f-title','f-icon','f-link','f-desc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('modal-bd').classList.add('open');
+}
+function editData(id,title,icon,link,desc){
+  document.getElementById('modal-title').textContent='Edit Project';
+  document.getElementById('f-id').value=id;
+  document.getElementById('f-title').value=title;
+  document.getElementById('f-icon').value=icon;
+  document.getElementById('f-link').value=link;
+  document.getElementById('f-desc').value=desc;
+  document.getElementById('modal-bd').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-bd').classList.remove('open')}
+document.getElementById('modal-bd').addEventListener('click',function(e){if(e.target===this)closeModal()});
 </script>
-</body>
-</html>
+</body></html>

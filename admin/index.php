@@ -1,95 +1,78 @@
 <?php
 require 'koneksi.php';
+$page_title  = 'Dashboard';
+$active_menu = 'dashboard';
+require '_layout.php';
 
-// Cek apakah admin sudah login
-if (!isset($_SESSION['admin_logged_in'])) {
-    header("Location: login.php");
-    exit;
-}
-
-// Ambil jumlah data untuk ditampilkan di kotak dashboard
 $jml_experience = $pdo->query("SELECT COUNT(*) FROM experiences")->fetchColumn();
-$jml_projects = $pdo->query("SELECT COUNT(*) FROM projects")->fetchColumn();
-$jml_foto = $pdo->query("SELECT COUNT(*) FROM slws_photos")->fetchColumn(); // Ini masih 0 karena belum kita isi
+$jml_projects   = $pdo->query("SELECT COUNT(*) FROM projects")->fetchColumn();
+$jml_foto       = $pdo->query("SELECT COUNT(*) FROM slws_photos")->fetchColumn();
+$jml_video      = $pdo->query("SELECT COUNT(*) FROM videos")->fetchColumn();
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .sidebar { min-height: 100vh; background-color: #212529; }
-        .sidebar a { color: #adb5bd; text-decoration: none; padding: 12px 20px; display: block; }
-        .sidebar a:hover, .sidebar a.active { background-color: #343a40; color: #fff; border-left: 4px solid #198754; }
-    </style>
-</head>
-<body class="bg-light">
 
-<div class="d-flex">
-    <div class="sidebar text-white" style="width: 250px;">
-        <div class="p-3 text-center border-bottom border-secondary mb-3">
-            <h5 class="m-0">Admin Panel</h5>
-            <small class="text-success">Online</small>
-        </div>
-        <a href="index.php" class="active"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
-        <a href="profil.php"><i class="fas fa-user-edit me-2"></i> Pengaturan Profil</a>
-        <a href="experience.php"><i class="fas fa-briefcase me-2"></i> Kelola Experience</a>
-        <a href="projects.php"><i class="fas fa-project-diagram me-2"></i> Kelola Projects</a>
-        <div class="px-3 mt-4 mb-2 text-muted"><small>SELAWAS VISUAL</small></div>
-        <a href="kategori.php"><i class="fas fa-folder me-2"></i> Kategori Foto</a>
-        <a href="galeri.php"><i class="fas fa-images me-2"></i> Galeri Foto</a>
-        
-        <div class="mt-5">
-            <a href="logout.php" class="text-danger"><i class="fas fa-sign-out-alt me-2"></i> Logout</a>
-        </div>
-    </div>
-
-    <div class="flex-grow-1 p-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4>Dashboard</h4>
-            <span>Halo, <?= htmlspecialchars($_SESSION['username']) ?>!</span>
-        </div>
-
-        <div class="row">
-            <div class="col-md-3">
-                <div class="card text-white bg-primary mb-3 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="fas fa-briefcase"></i> Experience</h5>
-                        <p class="card-text fs-2 fw-bold"><?= $jml_experience ?></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-success mb-3 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="fas fa-project-diagram"></i> Projects</h5>
-                        <p class="card-text fs-2 fw-bold"><?= $jml_projects ?></p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-warning mb-3 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title"><i class="fas fa-images"></i> Foto Portfolio</h5>
-                        <p class="card-text fs-2 fw-bold"><?= $jml_foto ?></p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card mt-4 shadow-sm border-0">
-            <div class="card-body">
-                <h5>Selamat Datang di Admin Panel</h5>
-                <p class="text-muted">Gunakan menu di sebelah kiri untuk mengatur konten website kamu. Semua perubahan di sini akan langsung ter-update di halaman depan.</p>
-            </div>
-        </div>
-
-    </div>
+<div class="page-head">
+  <div class="page-head-left">
+    <h2>Dashboard</h2>
+    <p>Selamat datang kembali, <?= htmlspecialchars($_SESSION['username']) ?> 👋</p>
+  </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<div class="stats-grid">
+  <div class="stat-card blue">
+    <div class="stat-icon">💼</div>
+    <div class="stat-val"><?= $jml_experience ?></div>
+    <div class="stat-label">Experience</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon">⚙️</div>
+    <div class="stat-val"><?= $jml_projects ?></div>
+    <div class="stat-label">Projects</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-icon">🖼️</div>
+    <div class="stat-val"><?= $jml_foto ?></div>
+    <div class="stat-label">Foto Galeri</div>
+  </div>
+  <div class="stat-card purple">
+    <div class="stat-icon">🎬</div>
+    <div class="stat-val"><?= $jml_video ?></div>
+    <div class="stat-label">Video</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Quick Actions</span>
+  </div>
+  <div class="card-body" style="display:flex;flex-wrap:wrap;gap:10px;">
+    <a href="experience.php" class="btn btn-ghost"><i class="lucide lucide-briefcase"></i> Tambah Experience</a>
+    <a href="projects.php"   class="btn btn-ghost"><i class="lucide lucide-code-2"></i> Tambah Project</a>
+    <a href="galeri.php"     class="btn btn-ghost"><i class="lucide lucide-images"></i> Upload Foto</a>
+    <a href="video.php"      class="btn btn-ghost"><i class="lucide lucide-clapperboard"></i> Tambah Video</a>
+    <a href="profil.php"     class="btn btn-ghost"><i class="lucide lucide-user-round"></i> Edit Profil</a>
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px;">
+  <div class="card-header"><span class="card-title">Info</span></div>
+  <div class="card-body" style="font-size:13px; color: var(--text); line-height:1.8;">
+    Semua perubahan yang dilakukan di panel ini akan langsung tampil di halaman website.<br>
+    Gunakan menu di sidebar kiri untuk mengelola konten portfolio kamu.
+  </div>
+</div>
+
+</div><!-- .content -->
+</div><!-- .main -->
+
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('overlay').classList.remove('show');
+}
+</script>
 </body>
 </html>
