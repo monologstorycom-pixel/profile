@@ -1,4 +1,4 @@
-# 🎨 Monolog Story — Portfolio App
+# 🎨 Rsby — Portfolio App
 
 > Aplikasi portfolio berbasis PHP & MySQL yang dinamis, dilengkapi panel admin untuk mengelola konten secara mudah.
 
@@ -26,7 +26,7 @@
 
 ## 📖 Tentang Aplikasi
 
-**Monolog Story Portfolio** adalah aplikasi web portfolio yang dibangun menggunakan **PHP native** dan **MySQL**. Aplikasi ini memungkinkan pemilik untuk menampilkan karya, proyek, dan informasi diri secara profesional melalui halaman publik, serta mengelola semua konten melalui panel admin yang aman.
+**Rsby Portfolio** adalah aplikasi web portfolio yang dibangun menggunakan **PHP native** dan **MySQL**. Aplikasi ini memungkinkan pemilik untuk menampilkan karya, proyek, dan informasi diri secara profesional melalui halaman publik, serta mengelola semua konten melalui panel admin yang aman.
 
 ---
 
@@ -230,9 +230,6 @@ Proyek ini menggunakan lisensi **MIT**. Lihat file [LICENSE](LICENSE) untuk deta
 
 ## 📬 Kontak
 
-**Monolog Story**
-
-- 🌐 Website: [monologstory.com](https://monologstory.com)
 - 🐙 GitHub: [@monologstorycom-pixel](https://github.com/monologstorycom-pixel)
 
 ---
