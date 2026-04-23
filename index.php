@@ -422,27 +422,7 @@ function getYouTubeEmbed($url) {
                 </div>
             </section>
 
-            <section class="sec" aria-labelledby="vid-h">
-                <div class="sh">
-                    <h2 id="vid-h">Video Portfolio</h2>
-                    <div class="sh-line"></div>
-                </div>
-                <div class="pg-vid">
-                    <?php if (empty($videos)): ?>
-                        <p class="text-dim">Belum ada video.</p>
-                    <?php else: ?>
-                        <?php foreach ($videos as $vid): ?>
-                        <div class="pc" style="cursor: default; padding: 12px;">
-                            <div class="video-wrapper">
-                                <iframe src="<?= getYouTubeEmbed($vid['video_url']) ?>" allowfullscreen></iframe>
-                            </div>
-                            <div class="pt"><?= htmlspecialchars($vid['title']) ?></div>
-                            <p class="pd" style="margin-top: 4px;"><?= nl2br(htmlspecialchars($vid['description'])) ?></p>
-                        </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-            </section>
+            
 
         </main>
     </div>
