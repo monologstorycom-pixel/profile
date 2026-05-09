@@ -12,6 +12,8 @@ $menu = [
     ['href' => 'profil.php',     'icon' => 'user-round',   'label' => 'Profil',      'key' => 'profil'],
     ['href' => 'experience.php', 'icon' => 'briefcase',    'label' => 'Experience',  'key' => 'experience'],
     ['href' => 'projects.php',   'icon' => 'code-2',       'label' => 'Projects',    'key' => 'projects'],
+    ['href' => 'skills.php',     'icon' => 'zap',          'label' => 'Skills',      'key' => 'skills'],
+    ['href' => 'clients.php',    'icon' => 'building-2',   'label' => 'Clients',     'key' => 'clients'],
     ['href' => 'video.php',      'icon' => 'clapperboard', 'label' => 'Video',       'key' => 'video'],
 ];
 $menu_visual = [

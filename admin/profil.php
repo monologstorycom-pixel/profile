@@ -22,8 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $profile_picture = 'uploads/' . $fname;
         }
     }
-    $pdo->prepare("UPDATE profile_settings SET full_name=?,tagline=?,availability_status=?,email=?,github_link=?,linkedin_link=?,profile_picture=? WHERE id=?")
-        ->execute([$_POST['full_name'],$_POST['tagline'],$_POST['availability_status'],$_POST['email'],$_POST['github_link'],$_POST['linkedin_link'],$profile_picture,$profil['id']]);
+    $wa = preg_replace('/[^0-9]/', '', $_POST['whatsapp'] ?? '');
+    $pdo->prepare("UPDATE profile_settings SET full_name=?,tagline=?,availability_status=?,email=?,github_link=?,linkedin_link=?,whatsapp=?,profile_picture=? WHERE id=?")
+        ->execute([$_POST['full_name'],$_POST['tagline'],$_POST['availability_status'],$_POST['email'],$_POST['github_link'],$_POST['linkedin_link'],$wa,$profile_picture,$profil['id']]);
     $pesan = 'Profil berhasil diperbarui!';
     $profil = $pdo->query("SELECT * FROM profile_settings LIMIT 1")->fetch();
 }
@@ -72,6 +73,11 @@ require '_layout.php';
         <div class="form-group">
           <label class="form-label">LinkedIn Link</label>
           <input type="text" name="linkedin_link" class="form-control" value="<?= htmlspecialchars($profil['linkedin_link'] ?? '') ?>">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nomor WhatsApp</label>
+          <input type="text" name="whatsapp" class="form-control" placeholder="cth: 6281234567890" value="<?= htmlspecialchars($profil['whatsapp'] ?? '') ?>">
+          <div class="form-sub" style="margin-top:4px">Format internasional tanpa + (62xxx)</div>
         </div>
       </div>
     </div>

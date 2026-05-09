@@ -25,6 +25,31 @@ $projects = $stmtProj->fetchAll();
 $stmtVid = $pdo->query("SELECT * FROM videos ORDER BY id DESC");
 $videos = $stmtVid->fetchAll();
 
+// --- AMBIL DATA SKILLS ---
+$skills_raw = [];
+try {
+    $stmtSkills = $pdo->query("SELECT * FROM skills ORDER BY group_name, sort_order, skill_name");
+    foreach ($stmtSkills->fetchAll() as $s) {
+        $skills_raw[$s['group_name']][] = $s['skill_name'];
+    }
+} catch (Exception $e) {}
+
+// Fallback hardcode jika tabel belum ada
+if (empty($skills_raw)) {
+    $skills_raw = [
+        'Programming'    => ['Python', 'Next.js', 'PHP'],
+        'Networking'     => ['LAN/WAN', 'TCP/IP', 'Firewall', 'CCTV', 'UniFi', 'Ruijie'],
+        'Infrastructure' => ['MikroTik', 'Proxmox', 'Docker', 'Linux'],
+    ];
+}
+
+// --- AMBIL DATA CLIENTS ---
+$clients = [];
+try {
+    $stmtClients = $pdo->query("SELECT * FROM clients ORDER BY sort_order, id");
+    $clients = $stmtClients->fetchAll();
+} catch (Exception $e) {}
+
 // --- FUNGSI HELPER: Convert Link YouTube biasa ke format Embed ---
 function getYouTubeEmbed($url) {
     preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/\s]{11})%i', $url, $match);
@@ -74,6 +99,8 @@ function getYouTubeEmbed($url) {
     </script>
 
     <link rel="icon" type="image/png" href="<?= $foto ?>">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#090b09">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -271,7 +298,38 @@ function getYouTubeEmbed($url) {
         .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px; margin-bottom: 12px; border: 1px solid var(--border-s); background: #000; }
         .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
 
-        /* ── FOOTER & LIGHTBOX ── */
+        .btn-wa { border-color: #25d366; color: #25d366; background: rgba(37,211,102,0.07); }
+        .btn-wa:hover { background: #25d366; color: #fff; border-color: #25d366; }
+
+        /* ── BACK TO TOP ── */
+        .btt {
+            position: fixed; bottom: 24px; right: 18px; z-index: 199;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: var(--card); border: 1px solid var(--border-s);
+            color: var(--text); font-size: 14px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: var(--shadow); transition: all 0.2s;
+            opacity: 0; pointer-events: none;
+        }
+        .btt.show { opacity: 1; pointer-events: auto; }
+        .btt:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-2px); }
+
+        /* ── SKELETON LOADING ── */
+        .skeleton {
+            background: linear-gradient(90deg, var(--border) 25%, var(--border-s) 50%, var(--border) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 6px;
+        }
+        @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+        .sk-line { height: 12px; margin-bottom: 8px; }
+        .sk-line.wide { width: 80%; }
+        .sk-line.mid  { width: 55%; }
+        .sk-line.slim { width: 35%; }
+        .sk-block { height: 60px; margin-bottom: 16px; }
+        #skeleton-exp, #skeleton-proj { display: none; }
+
+        /* ── PWA manifest link added in head ── */
         footer { text-align: center; padding: 36px 20px 24px; font-size: 12px; color: var(--text-dim); border-top: 1px solid var(--border); margin-top: 56px; }
         footer a { color: var(--accent); text-decoration: none; }
         
@@ -319,6 +377,9 @@ function getYouTubeEmbed($url) {
                 <a href="<?= $linkedin ?>" target="_blank" rel="noopener" class="btn">
                     <i class="fab fa-linkedin"></i> LinkedIn
                 </a>
+                <a href="https://wa.me/<?= preg_replace('/[^0-9]/', '', $profil['whatsapp'] ?? '') ?>" target="_blank" rel="noopener" class="btn btn-wa">
+                    <i class="fab fa-whatsapp"></i> WhatsApp
+                </a>
                 <a href="mailto:<?= $email ?>" class="btn btn-hi">
                     <i class="fas fa-paper-plane"></i> Hire Me
                 </a>
@@ -337,61 +398,45 @@ function getYouTubeEmbed($url) {
     <div class="grid">
 
         <aside class="sb f d2">
+            <?php foreach ($skills_raw as $group_name => $skill_list): ?>
             <div class="sg">
-                <span class="slabel">Programming</span>
+                <span class="slabel"><?= htmlspecialchars($group_name) ?></span>
                 <div class="tags">
-                    <span class="tag">Python</span>
-                    <span class="tag">Next.js</span>
-                    <span class="tag">PHP</span>
+                    <?php foreach ($skill_list as $skill): ?>
+                        <span class="tag"><?= htmlspecialchars($skill) ?></span>
+                    <?php endforeach; ?>
                 </div>
             </div>
-            <div class="sg">
-                <span class="slabel">Networking</span>
-                <div class="tags">
-                    <span class="tag">LAN/WAN</span>
-                    <span class="tag">TCP/IP</span>
-                    <span class="tag">Firewall</span>
-                    <span class="tag">CCTV</span>
-                    <span class="tag">UniFi</span>
-                    <span class="tag">Ruijie</span>
-                </div>
-            </div>
-            <div class="sg">
-                <span class="slabel">Infrastructure</span>
-                <div class="tags">
-                    <span class="tag">MikroTik</span>
-                    <span class="tag">Proxmox</span>
-                    <span class="tag">Docker</span>
-                    <span class="tag">Linux</span>
-                </div>
-            </div>
+            <?php endforeach; ?>
+
             <div class="sg">
                 <span class="slabel">Clients</span>
                 <div class="clients">
-                    <div class="cl">
-                        <div class="cl-ic"><i class="fas fa-landmark"></i></div>
-                        <div><a class="cl-name" href="https://bpkad.pekalongankota.go.id/" target="_blank" rel="noopener">Badan Keuangan Daerah</a><div class="cl-loc">Kota Pekalongan</div></div>
-                    </div>
-                    <div class="cl">
-                        <div class="cl-ic"><i class="fas fa-clinic-medical"></i></div>
-                        <div><a class="cl-name" href="#" target="_blank" rel="noopener">Klinik Kukuh Subekti</a><div class="cl-loc">Comal, Pemalang</div></div>
-                    </div>
-                    <div class="cl">
-                        <div class="cl-ic"><i class="fas fa-industry"></i></div>
-                        <div><a class="cl-name" href="#" target="_blank" rel="noopener">PT Duta Albasy</a><div class="cl-loc">Kajen, Kab. Pekalongan</div></div>
-                    </div>
-                    <div class="cl">
-                        <div class="cl-ic"><i class="fas fa-hospital"></i></div>
-                        <div><a class="cl-name" href="https://puskeskaranganyar.karanganyarkab.go.id/" target="_blank" rel="noopener">Puskesmas Karanganyar</a><div class="cl-loc">Kab. Pekalongan</div></div>
-                    </div>
-                    <div class="cl">
-                        <div class="cl-ic"><i class="fas fa-hospital-alt"></i></div>
-                        <div><a class="cl-name" href="https://rsudkajen.pekalongankab.go.id/" target="_blank" rel="noopener">RSUD Kajen</a><div class="cl-loc">Kab. Pekalongan</div></div>
-                    </div>
-                    <div class="cl">
-                        <div class="cl-ic"><i class="fas fa-tshirt"></i></div>
-                        <div><a class="cl-name" href="https://www.behaestex.co.id/" target="_blank" rel="noopener">PT Behaestex</a><div class="cl-loc">Wonopringgo, Kab. Pekalongan</div></div>
-                    </div>
+                    <?php if (!empty($clients)): ?>
+                        <?php foreach ($clients as $c): ?>
+                        <div class="cl">
+                            <div class="cl-ic"><i class="<?= htmlspecialchars($c['icon_class']) ?>"></i></div>
+                            <div>
+                                <?php if (!empty($c['url'])): ?>
+                                    <a class="cl-name" href="<?= htmlspecialchars($c['url']) ?>" target="_blank" rel="noopener"><?= htmlspecialchars($c['name']) ?></a>
+                                <?php else: ?>
+                                    <span class="cl-name" style="cursor:default"><?= htmlspecialchars($c['name']) ?></span>
+                                <?php endif; ?>
+                                <?php if (!empty($c['location'])): ?>
+                                    <div class="cl-loc"><?= htmlspecialchars($c['location']) ?></div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <!-- Fallback hardcoded jika tabel clients belum ada -->
+                        <div class="cl"><div class="cl-ic"><i class="fas fa-landmark"></i></div><div><a class="cl-name" href="https://bpkad.pekalongankota.go.id/" target="_blank" rel="noopener">Badan Keuangan Daerah</a><div class="cl-loc">Kota Pekalongan</div></div></div>
+                        <div class="cl"><div class="cl-ic"><i class="fas fa-clinic-medical"></i></div><div><span class="cl-name" style="cursor:default">Klinik Kukuh Subekti</span><div class="cl-loc">Comal, Pemalang</div></div></div>
+                        <div class="cl"><div class="cl-ic"><i class="fas fa-industry"></i></div><div><span class="cl-name" style="cursor:default">PT Duta Albasy</span><div class="cl-loc">Kajen, Kab. Pekalongan</div></div></div>
+                        <div class="cl"><div class="cl-ic"><i class="fas fa-hospital"></i></div><div><a class="cl-name" href="https://puskeskaranganyar.karanganyarkab.go.id/" target="_blank" rel="noopener">Puskesmas Karanganyar</a><div class="cl-loc">Kab. Pekalongan</div></div></div>
+                        <div class="cl"><div class="cl-ic"><i class="fas fa-hospital-alt"></i></div><div><a class="cl-name" href="https://rsudkajen.pekalongankab.go.id/" target="_blank" rel="noopener">RSUD Kajen</a><div class="cl-loc">Kab. Pekalongan</div></div></div>
+                        <div class="cl"><div class="cl-ic"><i class="fas fa-tshirt"></i></div><div><a class="cl-name" href="https://www.behaestex.co.id/" target="_blank" rel="noopener">PT Behaestex</a><div class="cl-loc">Wonopringgo, Kab. Pekalongan</div></div></div>
+                    <?php endif; ?>
                 </div>
             </div>
         </aside>
@@ -479,8 +524,12 @@ function getYouTubeEmbed($url) {
     </div>
 </div>
 
+<button class="btt" id="btt" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Kembali ke atas">
+    <i class="fas fa-chevron-up"></i>
+</button>
+
 <footer>
-    <p>© <?= date('Y') ?> <?= $nama ?> <a href="mailto:<?= $email ?>"></a></p>
+    <p>© <?= date('Y') ?> <?= $nama ?> · <a href="mailto:<?= $email ?>"><?= $email ?></a></p>
 </footer>
 
 <div class="lb" id="lb" onclick="this.classList.remove('open')">
@@ -500,6 +549,19 @@ function getYouTubeEmbed($url) {
     function toggleTheme() {
         setTheme(html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
     }
+
+    // Back to top
+    const btt = document.getElementById('btt');
+    window.addEventListener('scroll', () => {
+        btt.classList.toggle('show', window.scrollY > 300);
+    }, { passive: true });
+
+    // PWA install
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
 
     try {
         const s = localStorage.getItem('theme');
