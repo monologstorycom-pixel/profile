@@ -1,7 +1,7 @@
 <?php
 require 'koneksi.php';
 
-// BUG 10 FIX: Auth check SEBELUM memproses POST apapun
+// Auth check SEBELUM memproses POST apapun
 if (!isset($_SESSION['admin_logged_in'])) {
     header('Location: login.php'); exit;
 }
@@ -22,7 +22,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_FILES['foto']) && $_FILES['foto']['error'] == 0) {
         $folder = '../uploads/';
         if (!is_dir($folder)) mkdir($folder, 0755, true);
-        // BUG 9 FIX: Validasi MIME type sungguhan (bukan hanya ekstensi yang bisa dipalsukan)
         $allowed_mime = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
         $real_mime = mime_content_type($_FILES['foto']['tmp_name']);
         $mime_to_ext = ['image/jpeg' => 'jpg', 'image/jpg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
@@ -39,11 +38,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $wa = preg_replace('/[^0-9]/', '', $_POST['whatsapp'] ?? '');
     $pdo->prepare("UPDATE profile_settings SET full_name=?,tagline=?,availability_status=?,email=?,github_link=?,linkedin_link=?,whatsapp=?,profile_picture=? WHERE id=?")
         ->execute([$_POST['full_name'],$_POST['tagline'],$_POST['availability_status'],$_POST['email'],$_POST['github_link'],$_POST['linkedin_link'],$wa,$profile_picture,$profil['id']]);
-    $pesan = 'Profil berhasil diperbarui!';
+    if (!$pesan) $pesan = 'Profil berhasil diperbarui!';
     $profil = $pdo->query("SELECT * FROM profile_settings LIMIT 1")->fetch();
 }
 require '_layout.php';
 ?>
+
+<style>
+/* Layout dua kolom: form kiri, foto kanan */
+.profil-layout {
+    display: grid;
+    grid-template-columns: 1fr 240px;
+    gap: 16px;
+    align-items: start;
+}
+@media (max-width: 768px) {
+    .profil-layout {
+        grid-template-columns: 1fr;
+    }
+    /* Di mobile foto muncul duluan biar langsung kelihatan */
+    .profil-foto-card { order: -1; }
+}
+
+/* form-row jadi 1 kolom di mobile */
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+@media (max-width: 600px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 
 <div class="page-head">
   <div class="page-head-left">
@@ -52,12 +80,16 @@ require '_layout.php';
   </div>
 </div>
 
-<?php if ($pesan): ?><div class="alert alert-success"><span>✓</span> <?= $pesan ?></div><?php endif; ?>
+<?php if ($pesan): ?>
+  <div class="alert alert-<?= str_starts_with($pesan, 'Error') ? 'danger' : 'success' ?>">
+    <span><?= str_starts_with($pesan, 'Error') ? '✕' : '✓' ?></span> <?= htmlspecialchars($pesan) ?>
+  </div>
+<?php endif; ?>
 
 <form method="POST" enctype="multipart/form-data">
-<div style="display:grid;grid-template-columns:1fr 240px;gap:16px;align-items:start">
+<div class="profil-layout">
 
-  <!-- Left -->
+  <!-- Kiri: informasi utama -->
   <div class="card">
     <div class="card-header"><span class="card-title">Informasi Utama</span></div>
     <div class="card-body">
@@ -71,15 +103,25 @@ require '_layout.php';
           <input type="text" name="tagline" class="form-control" value="<?= htmlspecialchars($profil['tagline'] ?? '') ?>" required>
         </div>
       </div>
+
       <div class="form-group">
         <label class="form-label">Status Ketersediaan</label>
         <input type="text" name="availability_status" class="form-control" value="<?= htmlspecialchars($profil['availability_status'] ?? 'Tersedia untuk proyek baru') ?>">
       </div>
+
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Email</label>
           <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($profil['email'] ?? '') ?>">
         </div>
+        <div class="form-group">
+          <label class="form-label">Nomor WhatsApp</label>
+          <input type="text" name="whatsapp" class="form-control" placeholder="cth: 6281234567890" value="<?= htmlspecialchars($profil['whatsapp'] ?? '') ?>">
+          <div class="form-sub" style="margin-top:4px">Format internasional tanpa + (62xxx)</div>
+        </div>
+      </div>
+
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">GitHub Link</label>
           <input type="text" name="github_link" class="form-control" value="<?= htmlspecialchars($profil['github_link'] ?? '') ?>">
@@ -88,28 +130,23 @@ require '_layout.php';
           <label class="form-label">LinkedIn Link</label>
           <input type="text" name="linkedin_link" class="form-control" value="<?= htmlspecialchars($profil['linkedin_link'] ?? '') ?>">
         </div>
-        <div class="form-group">
-          <label class="form-label">Nomor WhatsApp</label>
-          <input type="text" name="whatsapp" class="form-control" placeholder="cth: 6281234567890" value="<?= htmlspecialchars($profil['whatsapp'] ?? '') ?>">
-          <div class="form-sub" style="margin-top:4px">Format internasional tanpa + (62xxx)</div>
-        </div>
       </div>
     </div>
   </div>
 
-  <!-- Right: Photo -->
-  <div class="card">
+  <!-- Kanan: foto profil -->
+  <div class="card profil-foto-card">
     <div class="card-header"><span class="card-title">Foto Profil</span></div>
     <div class="card-body" style="text-align:center">
       <?php if (!empty($profil['profile_picture'])): ?>
-        <img src="../<?= $profil['profile_picture'] ?>" alt="Profil"
+        <img src="../<?= htmlspecialchars($profil['profile_picture']) ?>" alt="Profil"
           style="width:110px;height:110px;object-fit:cover;border-radius:50%;border:2px solid var(--border2);margin-bottom:14px;display:block;margin-inline:auto">
       <?php else: ?>
         <div style="width:110px;height:110px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:36px;color:var(--text-dim)">
           👤
         </div>
       <?php endif; ?>
-      <input type="file" name="foto" class="form-control" accept="image/png,image/jpeg,image/jpg">
+      <input type="file" name="foto" class="form-control" accept="image/png,image/jpeg,image/jpg,image/webp">
       <div class="form-sub" style="text-align:center;margin-top:6px">Kosongkan jika tidak ingin mengubah foto</div>
     </div>
   </div>
@@ -117,7 +154,7 @@ require '_layout.php';
 </div>
 
 <div style="margin-top:16px">
-  <button type="submit" class="btn btn-primary"><i class="lucide lucide-save"></i> Simpan Perubahan</button>
+  <button type="submit" class="btn btn-primary"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Simpan Perubahan</button>
 </div>
 
 </form>

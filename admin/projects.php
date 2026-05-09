@@ -42,7 +42,7 @@ require '_layout.php';
     <p>Kelola kartu project di halaman depan</p>
   </div>
   <button class="btn btn-primary" onclick="openModal()">
-    <i class="lucide lucide-plus"></i> Tambah
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Tambah
   </button>
 </div>
 
@@ -62,7 +62,7 @@ require '_layout.php';
       </thead>
       <tbody>
         <?php if (empty($projects)): ?>
-          <tr><td colspan="5"><div class="empty-box"><i class="lucide lucide-folder-open"></i><p>Belum ada project.</p></div></td></tr>
+          <tr><td colspan="5"><div class="empty-box"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><p>Belum ada project.</p></div></td></tr>
         <?php else: ?>
           <?php foreach ($projects as $p): ?>
           <tr>
@@ -72,7 +72,7 @@ require '_layout.php';
             <td>
               <?php if ($p['link_url']): ?>
                 <a href="<?= htmlspecialchars($p['link_url']) ?>" target="_blank" class="btn btn-ghost btn-sm" style="gap:4px">
-                  <i class="lucide lucide-external-link"></i> Buka
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Buka
                 </a>
               <?php else: ?>
                 <span style="color:var(--text-dim);font-size:12px">—</span>
@@ -81,10 +81,10 @@ require '_layout.php';
             <td>
               <div class="td-action">
                 <button class="btn btn-warn btn-sm btn-icon" onclick="editData(<?= $p['id'] ?>, '<?= htmlspecialchars(addslashes($p['title'])) ?>', '<?= htmlspecialchars(addslashes($p['icon_class'])) ?>', '<?= htmlspecialchars(addslashes($p['link_url'])) ?>', `<?= addslashes(htmlspecialchars($p['description'])) ?>`)">
-                  <i class="lucide lucide-pencil"></i>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
                 <a href="projects.php?aksi=hapus&id=<?= $p['id'] ?>" class="btn btn-danger btn-sm btn-icon" onclick="return confirm('Hapus project ini?')">
-                  <i class="lucide lucide-trash-2"></i>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                 </a>
               </div>
             </td>

@@ -40,13 +40,13 @@ function ytThumb($url) {
     <h2>Video Portfolio</h2>
     <p>Kelola video YouTube yang tampil di portfolio</p>
   </div>
-  <button class="btn btn-primary" onclick="openModal()"><i class="lucide lucide-plus"></i> Tambah</button>
+  <button class="btn btn-primary" onclick="openModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Tambah</button>
 </div>
 
 <?php if ($pesan): ?><div class="alert alert-success"><span>✓</span> <?= $pesan ?></div><?php endif; ?>
 
 <?php if (empty($videos)): ?>
-  <div class="empty-box" style="padding:80px"><i class="lucide lucide-clapperboard"></i><p>Belum ada video.</p></div>
+  <div class="empty-box" style="padding:80px"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 6 3 11l-.9-2.4c-.3-1.1.3-2.2 1.3-2.5l13.5-4c1.1-.3 2.2.3 2.5 1.3Z"/><path d="m6.2 5.3 3.1 3.9"/><path d="m12.4 3.4 3.1 3.9"/><path d="M3 11h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg><p>Belum ada video.</p></div>
 <?php else: ?>
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px">
     <?php foreach ($videos as $v): 
@@ -58,7 +58,7 @@ function ytThumb($url) {
           <img src="<?= $thumb ?>" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.8">
           <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
             <div style="width:42px;height:42px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
-              <i class="lucide lucide-play" style="color:#fff;font-size:16px;margin-left:2px"></i>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             </div>
           </div>
         </div>
@@ -68,10 +68,10 @@ function ytThumb($url) {
         <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px"><?= htmlspecialchars($v['description']) ?></div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-warn btn-sm" onclick="editData(<?= $v['id'] ?>, '<?= htmlspecialchars(addslashes($v['title'])) ?>', '<?= htmlspecialchars(addslashes($v['video_url'])) ?>', '<?= htmlspecialchars(addslashes($v['description'])) ?>')">
-            <i class="lucide lucide-pencil"></i> Edit
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
           </button>
           <a href="video.php?aksi=hapus&id=<?= $v['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Hapus video ini?')">
-            <i class="lucide lucide-trash-2"></i>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           </a>
         </div>
       </div>
