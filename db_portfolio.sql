@@ -128,7 +128,8 @@ CREATE TABLE `projects` (
   `title` varchar(100) NOT NULL,
   `description` text NOT NULL,
   `icon_class` varchar(50) NOT NULL,
-  `link_url` varchar(255) DEFAULT NULL
+  `link_url` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --

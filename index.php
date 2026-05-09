@@ -18,7 +18,12 @@ $stmtExp = $pdo->query("SELECT * FROM experiences ORDER BY id DESC");
 $experiences = $stmtExp->fetchAll();
 
 // --- AMBIL DATA PROJECTS ---
-$stmtProj = $pdo->query("SELECT * FROM projects ORDER BY id DESC");
+// Coba ambil dengan created_at, fallback tanpa
+try {
+    $stmtProj = $pdo->query("SELECT *, TIMESTAMPDIFF(DAY, created_at, NOW()) AS days_ago FROM projects ORDER BY id DESC");
+} catch (Exception $e) {
+    $stmtProj = $pdo->query("SELECT *, NULL AS days_ago FROM projects ORDER BY id DESC");
+}
 $projects = $stmtProj->fetchAll();
 
 // --- AMBIL DATA VIDEO ---
@@ -288,8 +293,33 @@ function getYouTubeEmbed($url) {
         .pg-vid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
         @media (max-width: 480px) { .pg-vid { grid-template-columns: 1fr; } }
 
-        .pc { border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-decoration: none; display: block; background: var(--card); transition: border-color 0.18s, background 0.18s; }
+        .pc { border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-decoration: none; display: flex; flex-direction: column; background: var(--card); transition: border-color 0.18s, background 0.18s; position: relative; }
         a.pc:hover { border-color: var(--accent); background: var(--card-h); }
+
+        .pc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+        .pc-body { flex: 1; }
+        
+        .badge-new {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 9.5px; font-weight: 600; letter-spacing: 0.06em;
+            text-transform: uppercase; padding: 2px 7px; border-radius: 99px;
+            background: var(--accent-bg); color: var(--accent);
+            border: 1px solid var(--accent); white-space: nowrap; flex-shrink: 0;
+            animation: badgePulse 2.5s ease infinite;
+        }
+        @keyframes badgePulse { 0%,100%{opacity:1} 50%{opacity:.65} }
+        .badge-new::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--accent); }
+
+        .pc-btn {
+            display: inline-flex; align-items: center; gap: 5px;
+            margin-top: 12px; padding: 5px 11px; border-radius: 6px;
+            font-size: 11px; font-weight: 500; text-decoration: none;
+            border: 1px solid var(--border-s); color: var(--text);
+            background: transparent; transition: all 0.15s;
+            width: fit-content;
+        }
+        .pc-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .pc-btn svg { flex-shrink: 0; }
         
         .pi { font-size: 16px; color: var(--accent); margin-bottom: 10px; display: block; }
         .pt { font-size: 13px; font-weight: 600; color: var(--text-head); margin-bottom: 4px; line-height: 1.3; }
@@ -497,22 +527,30 @@ function getYouTubeEmbed($url) {
                     <?php if (empty($projects)): ?>
                         <p class="text-dim">Belum ada project.</p>
                     <?php else: ?>
-                        <?php foreach ($projects as $proj): ?>
-                            <?php if (!empty($proj['link_url'])): ?>
-                                <a href="<?= htmlspecialchars($proj['link_url']) ?>" target="_blank" rel="noopener" class="pc">
-                            <?php else: ?>
-                                <div class="pc" style="cursor: default;">
-                            <?php endif; ?>
-
-                                <i class="<?= htmlspecialchars($proj['icon_class']) ?> pi" aria-hidden="true"></i>
+                        <?php foreach ($projects as $proj):
+                            $isNew = isset($proj['days_ago']) && $proj['days_ago'] !== null && $proj['days_ago'] <= 30;
+                            $hasLink = !empty($proj['link_url']);
+                        ?>
+                        <div class="pc <?= $hasLink ? 'pc-linked' : '' ?>">
+                            <div class="pc-top">
+                                <i class="<?= htmlspecialchars($proj['icon_class']) ?> pi" aria-hidden="true" style="margin-bottom:0"></i>
+                                <?php if ($isNew): ?>
+                                    <span class="badge-new">New</span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="pc-body">
                                 <div class="pt"><?= htmlspecialchars($proj['title']) ?></div>
                                 <p class="pd"><?= htmlspecialchars($proj['description']) ?></p>
-
-                            <?php if (!empty($proj['link_url'])): ?>
+                            </div>
+                            <?php if ($hasLink): ?>
+                                <a href="<?= htmlspecialchars($proj['link_url']) ?>" target="_blank" rel="noopener" class="pc-btn" onclick="event.stopPropagation()">
+                                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M9 2h5v5"/><path d="M7.5 8.5L14 2"/><path d="M7 3H3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V9"/>
+                                    </svg>
+                                    Lihat Project
                                 </a>
-                            <?php else: ?>
-                                </div>
                             <?php endif; ?>
+                        </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
