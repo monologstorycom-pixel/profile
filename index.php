@@ -94,10 +94,10 @@ function getYouTubeEmbed($url) {
       "jobTitle": "IT Support Specialist & Full-stack Developer",
       "email": "<?= $email ?>",
       "url": "https://rsby.my.id/",
-      "image": "<?= $foto ?>",
+      "image": "<?= htmlspecialchars(addslashes($foto)) ?>",
       "sameAs": [
-        "<?= $github ?>",
-        "<?= $linkedin ?>"
+        "<?= htmlspecialchars(addslashes($github)) ?>",
+        "<?= htmlspecialchars(addslashes($linkedin)) ?>"
       ],
       "knowsAbout": ["IT Support", "Networking", "MikroTik", "PHP", "Python", "Next.js", "Docker", "Linux"]
     }
@@ -407,9 +407,12 @@ function getYouTubeEmbed($url) {
                 <a href="<?= $linkedin ?>" target="_blank" rel="noopener" class="btn">
                     <i class="fab fa-linkedin"></i> LinkedIn
                 </a>
-                <a href="https://wa.me/<?= preg_replace('/[^0-9]/', '', $profil['whatsapp'] ?? '') ?>" target="_blank" rel="noopener" class="btn btn-wa">
+                <?php $wa_num = preg_replace('/[^0-9]/', '', $profil['whatsapp'] ?? ''); if ($wa_num): ?>
+                <a href="https://wa.me/<?= $wa_num ?>" target="_blank" rel="noopener" class="btn btn-wa">
+                    <!-- BUG 5 FIX: Sembunyikan tombol WA jika nomor tidak diisi -->
                     <i class="fab fa-whatsapp"></i> WhatsApp
                 </a>
+                <?php endif; ?>
                 <a href="mailto:<?= $email ?>" class="btn btn-hi">
                     <i class="fas fa-paper-plane"></i> Hire Me
                 </a>
@@ -492,22 +495,23 @@ function getYouTubeEmbed($url) {
                             <div class="ti-co"><?= htmlspecialchars($exp['company']) ?></div>
                             
                             <?php if (!$exp['is_active']): ?>
+                                <!-- BUG 6 FIX: <div class="buls"> sekarang di dalam <details> agar HTML valid -->
                                 <details class="det">
                                     <summary><i class="fas fa-chevron-right cv"></i> Lihat detail</summary>
                             <?php endif; ?>
                             
-                            <div class="buls">
-                                <?php 
-                                $bullets = explode("\n", trim($exp['description']));
-                                foreach ($bullets as $bullet):
-                                    if (trim($bullet) !== ''):
-                                ?>
-                                    <div class="bul"><div class="bd"></div><span><?= htmlspecialchars(trim($bullet)) ?></span></div>
-                                <?php 
-                                    endif;
-                                endforeach; 
-                                ?>
-                            </div>
+                                    <div class="buls">
+                                        <?php 
+                                        $bullets = explode("\n", trim($exp['description']));
+                                        foreach ($bullets as $bullet):
+                                            if (trim($bullet) !== ''):
+                                        ?>
+                                            <div class="bul"><div class="bd"></div><span><?= htmlspecialchars(trim($bullet)) ?></span></div>
+                                        <?php 
+                                            endif;
+                                        endforeach; 
+                                        ?>
+                                    </div>
 
                             <?php if (!$exp['is_active']): ?>
                                 </details>

@@ -1,5 +1,11 @@
 <?php
 require 'koneksi.php';
+
+// BUG 10 FIX: Auth check SEBELUM memproses POST apapun
+if (!isset($_SESSION['admin_logged_in'])) {
+    header('Location: login.php'); exit;
+}
+
 $page_title  = 'Profil';
 $active_menu = 'profil';
 
@@ -15,11 +21,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $profile_picture = $profil['profile_picture'];
     if (isset($_FILES['foto']) && $_FILES['foto']['error'] == 0) {
         $folder = '../uploads/';
-        if (!is_dir($folder)) mkdir($folder, 0777, true);
-        $ext = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
-        $fname = 'profil_' . time() . '.' . $ext;
-        if (move_uploaded_file($_FILES['foto']['tmp_name'], $folder . $fname)) {
-            $profile_picture = 'uploads/' . $fname;
+        if (!is_dir($folder)) mkdir($folder, 0755, true);
+        // BUG 9 FIX: Validasi MIME type sungguhan (bukan hanya ekstensi yang bisa dipalsukan)
+        $allowed_mime = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        $real_mime = mime_content_type($_FILES['foto']['tmp_name']);
+        $mime_to_ext = ['image/jpeg' => 'jpg', 'image/jpg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        if (!in_array($real_mime, $allowed_mime)) {
+            $pesan = 'Error: Hanya file gambar (JPG, PNG, WEBP) yang diizinkan.';
+        } else {
+            $ext   = $mime_to_ext[$real_mime];
+            $fname = 'profil_' . time() . '.' . $ext;
+            if (move_uploaded_file($_FILES['foto']['tmp_name'], $folder . $fname)) {
+                $profile_picture = 'uploads/' . $fname;
+            }
         }
     }
     $wa = preg_replace('/[^0-9]/', '', $_POST['whatsapp'] ?? '');

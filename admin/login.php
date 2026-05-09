@@ -7,8 +7,9 @@ if (isset($_SESSION['admin_logged_in'])) {
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+    // BUG 3 FIX: Trim input untuk mencegah login gagal karena spasi tersembunyi
+    $username = trim($_POST['username'] ?? '');
+    $password = trim($_POST['password'] ?? '');
     $stmt = $pdo->prepare("SELECT * FROM admin_users WHERE username = ?");
     $stmt->execute([$username]);
     $user = $stmt->fetch();

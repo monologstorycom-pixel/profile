@@ -17,13 +17,16 @@ $urls[] = [
     'priority'   => '1.0',
 ];
 
-// Tambahkan project jika punya URL publik
+// BUG 7 FIX: Validasi URL sebelum masuk sitemap, dan hindari double-encoding
 try {
     $stmtProj = $pdo->query("SELECT link_url, updated_at FROM projects WHERE link_url IS NOT NULL AND link_url != '' ORDER BY id DESC");
     foreach ($stmtProj->fetchAll() as $proj) {
+        $rawUrl = $proj['link_url'];
+        // Hanya masukkan URL yang valid dan skemanya http/https
+        if (!filter_var($rawUrl, FILTER_VALIDATE_URL) || !preg_match('/^https?:\/\//i', $rawUrl)) continue;
         $urls[] = [
-            'loc'        => htmlspecialchars($proj['link_url']),
-            'lastmod'    => isset($proj['updated_at']) ? date('Y-m-d', strtotime($proj['updated_at'])) : $today,
+            'loc'        => htmlspecialchars($rawUrl, ENT_XML1),
+            'lastmod'    => isset($proj['updated_at']) && $proj['updated_at'] ? date('Y-m-d', strtotime($proj['updated_at'])) : $today,
             'changefreq' => 'monthly',
             'priority'   => '0.6',
         ];
