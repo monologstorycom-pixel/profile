@@ -7,18 +7,155 @@ if (!isset($_SESSION['admin_logged_in'])) {
     exit;
 }
 
+// ── CUSTOM INLINE SVG ICONS ──
+function icon(string $name, int $size = 16): string {
+    $s = $size;
+    $h = $s / 2;
+    $icons = [
+
+        'dashboard' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <rect x='1.5' y='1.5' width='5.5' height='5.5' rx='1.2'/>
+            <rect x='9' y='1.5' width='5.5' height='5.5' rx='1.2'/>
+            <rect x='1.5' y='9' width='5.5' height='5.5' rx='1.2'/>
+            <rect x='9' y='9' width='5.5' height='5.5' rx='1.2'/>
+        </svg>",
+
+        'profil' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <circle cx='8' cy='5.5' r='2.8'/>
+            <path d='M2.5 14c0-3 2.5-4.5 5.5-4.5s5.5 1.5 5.5 4.5'/>
+        </svg>",
+
+        'experience' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <rect x='1.5' y='5.5' width='13' height='8.5' rx='1.4'/>
+            <path d='M5.5 5.5V4a2.5 2.5 0 0 1 5 0v1.5'/>
+            <line x1='8' y1='9' x2='8' y2='11'/>
+            <line x1='6.5' y1='10' x2='9.5' y2='10'/>
+        </svg>",
+
+        'projects' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <polyline points='5,3 2,8 5,13'/>
+            <polyline points='11,3 14,8 11,13'/>
+            <line x1='6.5' y1='11' x2='9.5' y2='5'/>
+        </svg>",
+
+        'skills' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <polygon points='8,1.5 10,6 14.5,6 11,9 12.5,14 8,11 3.5,14 5,9 1.5,6 6,6'/>
+        </svg>",
+
+        'clients' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <rect x='2' y='5' width='12' height='9' rx='1.2'/>
+            <path d='M5 5V4a3 3 0 0 1 6 0v1'/>
+            <line x1='2' y1='9' x2='14' y2='9'/>
+            <line x1='6' y1='7' x2='6' y2='11'/>
+            <line x1='10' y1='7' x2='10' y2='11'/>
+        </svg>",
+
+        'video' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <rect x='1.5' y='3.5' width='9' height='9' rx='1.4'/>
+            <path d='M10.5 6.5l4-2.5v8l-4-2.5'/>
+        </svg>",
+
+        'kategori' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <path d='M2 3.5h5l1.5 2H14a1 1 0 0 1 1 1V13a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z'/>
+            <line x1='4.5' y1='9.5' x2='11.5' y2='9.5'/>
+        </svg>",
+
+        'galeri' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <rect x='1.5' y='2.5' width='9' height='9' rx='1.2'/>
+            <rect x='5.5' y='6.5' width='9' height='7' rx='1.2'/>
+            <circle cx='5' cy='6' r='1'/>
+            <path d='M1.5 8.5l2.5-2.5 2 2'/>
+        </svg>",
+
+        'logout' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <path d='M6 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3'/>
+            <polyline points='11,11 14,8 11,5'/>
+            <line x1='14' y1='8' x2='6' y2='8'/>
+        </svg>",
+
+        'external-link' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <path d='M9 2h5v5'/>
+            <path d='M7.5 8.5L14 2'/>
+            <path d='M7 3H3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V9'/>
+        </svg>",
+
+        'bar-chart' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <rect x='2' y='9' width='3' height='5' rx='0.6'/>
+            <rect x='6.5' y='5.5' width='3' height='8.5' rx='0.6'/>
+            <rect x='11' y='2.5' width='3' height='11.5' rx='0.6'/>
+            <line x1='1' y1='14' x2='15' y2='14'/>
+        </svg>",
+
+        'menu' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round'>
+            <line x1='2' y1='4.5' x2='14' y2='4.5'/>
+            <line x1='2' y1='8' x2='14' y2='8'/>
+            <line x1='2' y1='11.5' x2='14' y2='11.5'/>
+        </svg>",
+
+        'sun' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round'>
+            <circle cx='8' cy='8' r='2.8'/>
+            <line x1='8' y1='1' x2='8' y2='2.5'/>
+            <line x1='8' y1='13.5' x2='8' y2='15'/>
+            <line x1='1' y1='8' x2='2.5' y2='8'/>
+            <line x1='13.5' y1='8' x2='15' y2='8'/>
+            <line x1='3.2' y1='3.2' x2='4.2' y2='4.2'/>
+            <line x1='11.8' y1='11.8' x2='12.8' y2='12.8'/>
+            <line x1='12.8' y1='3.2' x2='11.8' y2='4.2'/>
+            <line x1='4.2' y1='11.8' x2='3.2' y2='12.8'/>
+        </svg>",
+
+        'moon' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round'>
+            <path d='M13 10.5A6 6 0 0 1 5.5 3a6.5 6.5 0 1 0 7.5 7.5z'/>
+        </svg>",
+
+        'terminal' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <rect x='1.5' y='2.5' width='13' height='11' rx='1.4'/>
+            <polyline points='4,6 7,8.5 4,11'/>
+            <line x1='8.5' y1='11' x2='12' y2='11'/>
+        </svg>",
+
+        'info' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round'>
+            <circle cx='8' cy='8' r='6.5'/>
+            <line x1='8' y1='7' x2='8' y2='11'/>
+            <circle cx='8' cy='5' r='0.6' fill='currentColor' stroke='none'/>
+        </svg>",
+
+        'refresh' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <path d='M2.5 8A5.5 5.5 0 0 1 13 5'/>
+            <polyline points='13,2 13,5.5 9.5,5.5'/>
+            <path d='M13.5 8A5.5 5.5 0 0 1 3 11'/>
+            <polyline points='3,14 3,10.5 6.5,10.5'/>
+        </svg>",
+
+        'globe' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <circle cx='8' cy='8' r='6.5'/>
+            <path d='M8 1.5c-2 2-3 4-3 6.5s1 4.5 3 6.5'/>
+            <path d='M8 1.5c2 2 3 4 3 6.5s-1 4.5-3 6.5'/>
+            <line x1='1.5' y1='8' x2='14.5' y2='8'/>
+            <line x1='2' y1='5' x2='14' y2='5'/>
+            <line x1='2' y1='11' x2='14' y2='11'/>
+        </svg>",
+
+        'edit' => "<svg width='$s' height='$s' viewBox='0 0 16 16' fill='none' stroke='currentColor' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'>
+            <path d='M11 2.5l2.5 2.5-7.5 7.5H3.5V10z'/>
+            <line x1='9.5' y1='4' x2='12' y2='6.5'/>
+        </svg>",
+    ];
+    return $icons[$name] ?? "<svg width='$s' height='$s' viewBox='0 0 16 16'><circle cx='8' cy='8' r='4' fill='currentColor' opacity='.4'/></svg>";
+}
+
 $menu = [
-    ['href' => 'index.php',      'icon' => 'grid-2x2',     'label' => 'Dashboard',   'key' => 'dashboard'],
-    ['href' => 'profil.php',     'icon' => 'user-round',   'label' => 'Profil',      'key' => 'profil'],
-    ['href' => 'experience.php', 'icon' => 'briefcase',    'label' => 'Experience',  'key' => 'experience'],
-    ['href' => 'projects.php',   'icon' => 'code-2',       'label' => 'Projects',    'key' => 'projects'],
-    ['href' => 'skills.php',     'icon' => 'zap',          'label' => 'Skills',      'key' => 'skills'],
-    ['href' => 'clients.php',    'icon' => 'building-2',   'label' => 'Clients',     'key' => 'clients'],
-    ['href' => 'video.php',      'icon' => 'clapperboard', 'label' => 'Video',       'key' => 'video'],
+    ['href' => 'index.php',      'icon' => 'dashboard',   'label' => 'Dashboard',   'key' => 'dashboard'],
+    ['href' => 'profil.php',     'icon' => 'profil',      'label' => 'Profil',      'key' => 'profil'],
+    ['href' => 'experience.php', 'icon' => 'experience',  'label' => 'Experience',  'key' => 'experience'],
+    ['href' => 'projects.php',   'icon' => 'projects',    'label' => 'Projects',    'key' => 'projects'],
+    ['href' => 'skills.php',     'icon' => 'skills',      'label' => 'Skills',      'key' => 'skills'],
+    ['href' => 'clients.php',    'icon' => 'clients',     'label' => 'Clients',     'key' => 'clients'],
+    ['href' => 'video.php',      'icon' => 'video',       'label' => 'Video',       'key' => 'video'],
 ];
 $menu_visual = [
-    ['href' => 'kategori.php',   'icon' => 'folder-open',  'label' => 'Kategori',    'key' => 'kategori'],
-    ['href' => 'galeri.php',     'icon' => 'images',       'label' => 'Galeri Foto', 'key' => 'galeri'],
+    ['href' => 'kategori.php',   'icon' => 'kategori',    'label' => 'Kategori',    'key' => 'kategori'],
+    ['href' => 'galeri.php',     'icon' => 'galeri',      'label' => 'Galeri Foto', 'key' => 'galeri'],
 ];
 ?>
 <!DOCTYPE html>
@@ -34,9 +171,6 @@ $menu_visual = [
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet"></noscript>
 
-<!-- Lucide icons as inline SVG sprite via CSS — no external font file -->
-<link rel="preload" href="https://unpkg.com/lucide-static@latest/font/lucide.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link href="https://unpkg.com/lucide-static@latest/font/lucide.css" rel="stylesheet"></noscript>
 
 <style>
 /* ── THEMES ── */
@@ -466,7 +600,7 @@ textarea.form-control { resize: vertical; min-height: 90px; }
 <aside class="sidebar" id="sidebar">
   <div class="sb-logo">
     <div class="sb-logo-inner">
-      <div class="sb-logo-icon"><i class="lucide lucide-terminal" style="font-size:14px"></i></div>
+      <div class="sb-logo-icon"><?= icon('terminal', 15) ?></div>
       <div class="sb-logo-text">
         <div class="sb-logo-name">Admin Panel</div>
         <div class="sb-logo-sub">online</div>
@@ -479,7 +613,7 @@ textarea.form-control { resize: vertical; min-height: 90px; }
       <div class="sb-group-label">Menu</div>
       <?php foreach ($menu as $m): ?>
         <a href="<?= $m['href'] ?>" class="sb-link <?= ($active_menu ?? '') === $m['key'] ? 'active' : '' ?>">
-          <i class="lucide lucide-<?= $m['icon'] ?>"></i>
+          <?= icon($m['icon']) ?>
           <?= $m['label'] ?>
         </a>
       <?php endforeach; ?>
@@ -488,7 +622,7 @@ textarea.form-control { resize: vertical; min-height: 90px; }
       <div class="sb-group-label">Selawas Visual</div>
       <?php foreach ($menu_visual as $m): ?>
         <a href="<?= $m['href'] ?>" class="sb-link <?= ($active_menu ?? '') === $m['key'] ? 'active' : '' ?>">
-          <i class="lucide lucide-<?= $m['icon'] ?>"></i>
+          <?= icon($m['icon']) ?>
           <?= $m['label'] ?>
         </a>
       <?php endforeach; ?>
@@ -504,24 +638,24 @@ textarea.form-control { resize: vertical; min-height: 90px; }
       </div>
     </div>
     <a href="logout.php" class="sb-link" style="color: var(--red);">
-      <i class="lucide lucide-log-out"></i> Logout
+      <?= icon('logout') ?> Logout
     </a>
   </div>
 </aside>
 
 <div class="main">
   <div class="topbar">
-    <button class="hamburger" onclick="toggleSidebar()"><i class="lucide lucide-menu"></i></button>
+    <button class="hamburger" onclick="toggleSidebar()"><?= icon('menu') ?></button>
     <span class="topbar-title"><?= $page_title ?? 'Dashboard' ?></span>
     <span class="topbar-breadcrumb">/ <?= $active_menu ?? 'home' ?></span>
     <div class="topbar-right">
       <!-- ── DARK / LIGHT TOGGLE ── -->
       <button class="theme-toggle" id="themeBtn" onclick="toggleAdminTheme()" aria-label="Toggle tema">
-        <i class="lucide lucide-sun" id="themeIcon"></i>
+        <span id="themeIcon"><?= icon('sun', 13) ?></span>
         <span id="themeLabel">Light</span>
       </button>
       <a href="../index.php" target="_blank" class="btn btn-ghost btn-sm" style="gap:5px">
-        <i class="lucide lucide-external-link"></i> Lihat Website
+        <?= icon('external-link', 13) ?> Lihat Website
       </a>
     </div>
   </div>
@@ -546,7 +680,9 @@ function _applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   var icon  = document.getElementById('themeIcon');
   var label = document.getElementById('themeLabel');
-  if (icon)  icon.className  = t === 'dark' ? 'lucide lucide-sun' : 'lucide lucide-moon';
+  if (icon)  icon.innerHTML  = t === 'dark'
+    ? `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="8" cy="8" r="2.8"/><line x1="8" y1="1" x2="8" y2="2.5"/><line x1="8" y1="13.5" x2="8" y2="15"/><line x1="1" y1="8" x2="2.5" y2="8"/><line x1="13.5" y1="8" x2="15" y2="8"/><line x1="3.2" y1="3.2" x2="4.2" y2="4.2"/><line x1="11.8" y1="11.8" x2="12.8" y2="12.8"/><line x1="12.8" y1="3.2" x2="11.8" y2="4.2"/><line x1="4.2" y1="11.8" x2="3.2" y2="12.8"/></svg>`
+    : `<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M13 10.5A6 6 0 0 1 5.5 3a6.5 6.5 0 1 0 7.5 7.5z"/></svg>`;
   if (label) label.textContent = t === 'dark' ? 'Light' : 'Dark';
   try { localStorage.setItem('admin_theme', t); } catch(e){}
 }

@@ -116,19 +116,19 @@ $health_checks = [
     <p>Selamat datang kembali, <strong><?= htmlspecialchars($_SESSION['username']) ?></strong> 👋</p>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <a href="../index.php" target="_blank" class="btn btn-ghost btn-sm"><i class="lucide lucide-external-link"></i> Lihat Website</a>
-    <a href="https://search.google.com/search-console" target="_blank" class="btn btn-ghost btn-sm"><i class="lucide lucide-bar-chart-2"></i> Search Console</a>
+    <a href="../index.php" target="_blank" class="btn btn-ghost btn-sm"><?= icon('external-link', 13) ?> Lihat Website</a>
+    <a href="https://search.google.com/search-console" target="_blank" class="btn btn-ghost btn-sm"><?= icon('bar-chart', 13) ?> Search Console</a>
   </div>
 </div>
 
 <!-- STAT CARDS -->
 <div class="stats-grid-new">
-  <div class="scard"><div class="scard-icon" style="color:var(--accent)"><i class="lucide lucide-briefcase"></i></div><div class="scard-val"><?= $jml_experience ?></div><div class="scard-label">Experience</div></div>
-  <div class="scard"><div class="scard-icon" style="color:var(--accent)"><i class="lucide lucide-code-2"></i></div><div class="scard-val"><?= $jml_projects ?></div><div class="scard-label">Projects</div></div>
-  <div class="scard"><div class="scard-icon" style="color:var(--amber)"><i class="lucide lucide-zap"></i></div><div class="scard-val"><?= $jml_skills ?></div><div class="scard-label">Skills</div></div>
-  <div class="scard"><div class="scard-icon" style="color:var(--green)"><i class="lucide lucide-building-2"></i></div><div class="scard-val"><?= $jml_clients ?></div><div class="scard-label">Clients</div></div>
-  <div class="scard"><div class="scard-icon" style="color:var(--accent)"><i class="lucide lucide-images"></i></div><div class="scard-val"><?= $jml_foto ?></div><div class="scard-label">Foto Galeri</div></div>
-  <div class="scard"><div class="scard-icon" style="color:var(--red)"><i class="lucide lucide-clapperboard"></i></div><div class="scard-val"><?= $jml_video ?></div><div class="scard-label">Video</div></div>
+  <div class="scard"><div class="scard-icon" style="color:var(--accent)"><?= icon('experience', 20) ?></div><div class="scard-val"><?= $jml_experience ?></div><div class="scard-label">Experience</div></div>
+  <div class="scard"><div class="scard-icon" style="color:var(--accent)"><?= icon('projects', 20) ?></div><div class="scard-val"><?= $jml_projects ?></div><div class="scard-label">Projects</div></div>
+  <div class="scard"><div class="scard-icon" style="color:var(--amber)"><?= icon('skills', 20) ?></div><div class="scard-val"><?= $jml_skills ?></div><div class="scard-label">Skills</div></div>
+  <div class="scard"><div class="scard-icon" style="color:var(--green)"><?= icon('clients', 20) ?></div><div class="scard-val"><?= $jml_clients ?></div><div class="scard-label">Clients</div></div>
+  <div class="scard"><div class="scard-icon" style="color:var(--accent)"><?= icon('galeri', 20) ?></div><div class="scard-val"><?= $jml_foto ?></div><div class="scard-label">Foto Galeri</div></div>
+  <div class="scard"><div class="scard-icon" style="color:var(--red)"><?= icon('video', 20) ?></div><div class="scard-val"><?= $jml_video ?></div><div class="scard-label">Video</div></div>
 </div>
 
 <!-- ROW 1 -->
@@ -159,13 +159,13 @@ $health_checks = [
   <div class="card">
     <div class="card-header">
       <span class="card-title">Website Health</span>
-      <button class="btn btn-ghost btn-sm" onclick="runHealthCheck()"><i class="lucide lucide-refresh-cw"></i> Cek Ulang</button>
+      <button class="btn btn-ghost btn-sm" onclick="runHealthCheck()"><?= icon('refresh', 13) ?> Cek Ulang</button>
     </div>
     <div class="card-body">
       <div class="health-list">
         <?php foreach ($health_checks as $hc): ?>
         <div class="health-item" id="<?= $hc['id'] ?>">
-          <i class="lucide lucide-globe" style="font-size:13px;color:var(--text-dim)"></i>
+          <?= icon('globe', 13) ?>
           <span><?= $hc['label'] ?></span>
           <span class="health-badge hb-loading">Mengecek...</span>
         </div>
@@ -179,7 +179,7 @@ $health_checks = [
   <div class="card">
     <div class="card-header">
       <span class="card-title">Project Uptime</span>
-      <button class="btn btn-ghost btn-sm" onclick="runUptimeCheck()"><i class="lucide lucide-refresh-cw"></i> Cek Ulang</button>
+      <button class="btn btn-ghost btn-sm" onclick="runUptimeCheck()"><?= icon('refresh', 13) ?> Cek Ulang</button>
     </div>
     <div class="card-body">
       <?php if (empty($project_urls)): ?>
@@ -211,13 +211,13 @@ $health_checks = [
     <div class="card-header"><span class="card-title">Quick Actions</span></div>
     <div class="card-body">
       <div class="qa-list">
-        <a href="profil.php"     class="btn btn-ghost" style="justify-content:flex-start"><i class="lucide lucide-user-round"></i> Edit Profil & WhatsApp</a>
-        <a href="experience.php" class="btn btn-ghost" style="justify-content:flex-start"><i class="lucide lucide-briefcase"></i> Tambah Experience</a>
-        <a href="projects.php"   class="btn btn-ghost" style="justify-content:flex-start"><i class="lucide lucide-code-2"></i> Tambah Project</a>
-        <a href="skills.php"     class="btn btn-ghost" style="justify-content:flex-start"><i class="lucide lucide-zap"></i> Kelola Skills</a>
-        <a href="clients.php"    class="btn btn-ghost" style="justify-content:flex-start"><i class="lucide lucide-building-2"></i> Kelola Clients</a>
-        <a href="galeri.php"     class="btn btn-ghost" style="justify-content:flex-start"><i class="lucide lucide-images"></i> Upload Foto Galeri</a>
-        <a href="video.php"      class="btn btn-ghost" style="justify-content:flex-start"><i class="lucide lucide-clapperboard"></i> Tambah Video</a>
+        <a href="profil.php"     class="btn btn-ghost" style="justify-content:flex-start"><?= icon('profil') ?> Edit Profil & WhatsApp</a>
+        <a href="experience.php" class="btn btn-ghost" style="justify-content:flex-start"><?= icon('experience') ?> Tambah Experience</a>
+        <a href="projects.php"   class="btn btn-ghost" style="justify-content:flex-start"><?= icon('projects') ?> Tambah Project</a>
+        <a href="skills.php"     class="btn btn-ghost" style="justify-content:flex-start"><?= icon('skills') ?> Kelola Skills</a>
+        <a href="clients.php"    class="btn btn-ghost" style="justify-content:flex-start"><?= icon('clients') ?> Kelola Clients</a>
+        <a href="galeri.php"     class="btn btn-ghost" style="justify-content:flex-start"><?= icon('galeri') ?> Upload Foto Galeri</a>
+        <a href="video.php"      class="btn btn-ghost" style="justify-content:flex-start"><?= icon('video') ?> Tambah Video</a>
       </div>
     </div>
   </div>
@@ -226,7 +226,7 @@ $health_checks = [
   <div class="card">
     <div class="card-header">
       <span class="card-title">Preview Website</span>
-      <a href="https://rsby.my.id" target="_blank" class="btn btn-ghost btn-sm"><i class="lucide lucide-external-link"></i> Buka Full</a>
+      <a href="https://rsby.my.id" target="_blank" class="btn btn-ghost btn-sm"><?= icon('external-link', 13) ?> Buka Full</a>
     </div>
     <div class="card-body" style="padding:0">
       <div class="preview-wrap">
@@ -245,7 +245,7 @@ $health_checks = [
       <?php if (empty($logs)): ?>
         <div class="act-list">
           <div class="act-item">
-            <div class="act-icon"><i class="lucide lucide-info" style="font-size:13px"></i></div>
+            <div class="act-icon"><?= icon('info', 13) ?></div>
             <div>
               <div class="act-text">Belum ada aktivitas tercatat.</div>
               <div class="act-time">Aktifkan dengan SQL di bawah ini</div>
@@ -265,7 +265,7 @@ $health_checks = [
         <div class="act-list">
           <?php foreach ($logs as $log): ?>
           <div class="act-item">
-            <div class="act-icon"><i class="lucide <?= htmlspecialchars($log['icon'] ?? 'lucide-edit') ?>" style="font-size:13px"></i></div>
+            <div class="act-icon"><?= icon('edit', 13) ?></div>
             <div>
               <div class="act-text"><?= htmlspecialchars($log['action']) ?></div>
               <div class="act-time"><?= date('d M Y, H:i', strtotime($log['created_at'])) ?></div>
