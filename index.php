@@ -103,7 +103,19 @@ function getYouTubeEmbed($url) {
     }
     </script>
 
-    <link rel="icon" type="image/png" href="<?= $foto ?>">
+    <?php
+    // --- FAVICON ---
+    $favicon_val = $profil['favicon_url'] ?? '';
+    if (!$favicon_val) $favicon_val = $foto; // fallback: foto profil
+    $favicon_href = htmlspecialchars($favicon_val);
+    // Tentukan type berdasarkan ekstensi / URL
+    $fav_type = 'image/png';
+    if (str_ends_with($favicon_val, '.ico'))  $fav_type = 'image/x-icon';
+    if (str_ends_with($favicon_val, '.svg'))  $fav_type = 'image/svg+xml';
+    if (str_ends_with($favicon_val, '.webp')) $fav_type = 'image/webp';
+    ?>
+    <link rel="icon" type="<?= $fav_type ?>" href="<?= $favicon_href ?>">
+    <link rel="shortcut icon" href="<?= $favicon_href ?>">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#090b09">
     <link rel="preconnect" href="https://fonts.googleapis.com">
