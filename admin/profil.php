@@ -295,7 +295,7 @@ function updateFavPreview(src) {
     box.innerHTML = '<img src="' + src + '" style="width:32px;height:32px;object-fit:contain" onerror="this.parentNode.innerHTML=\'❌\'">';
 }
 
-{document.getElementById('sidebar').classList.toggle('mobile-open');document.getElementById('overlay').classList.toggle('show')}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('mobile-open');document.getElementById('overlay').classList.toggle('show')}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('mobile-open');document.getElementById('overlay').classList.remove('show')}
 </script>
 
