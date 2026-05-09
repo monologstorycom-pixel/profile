@@ -61,7 +61,7 @@ $health_checks = [
 .scard:hover{border-color:var(--border2)}
 .scard-val{font-size:26px;font-weight:700;color:var(--text-hi);font-family:var(--mono);line-height:1}
 .scard-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.07em}
-.scard-icon{font-size:18px;margin-bottom:2px}
+.scard-icon{font-size:20px;margin-bottom:4px;line-height:1;display:flex;align-items:center}
 
 .dash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
 @media(max-width:900px){.dash-grid{grid-template-columns:repeat(2,1fr)}}
@@ -123,12 +123,12 @@ $health_checks = [
 
 <!-- STAT CARDS -->
 <div class="stats-grid-new">
-  <div class="scard"><div class="scard-icon">💼</div><div class="scard-val"><?= $jml_experience ?></div><div class="scard-label">Experience</div></div>
-  <div class="scard"><div class="scard-icon">⚙️</div><div class="scard-val"><?= $jml_projects ?></div><div class="scard-label">Projects</div></div>
-  <div class="scard"><div class="scard-icon">⚡</div><div class="scard-val"><?= $jml_skills ?></div><div class="scard-label">Skills</div></div>
-  <div class="scard"><div class="scard-icon">🏢</div><div class="scard-val"><?= $jml_clients ?></div><div class="scard-label">Clients</div></div>
-  <div class="scard"><div class="scard-icon">🖼️</div><div class="scard-val"><?= $jml_foto ?></div><div class="scard-label">Foto Galeri</div></div>
-  <div class="scard"><div class="scard-icon">🎬</div><div class="scard-val"><?= $jml_video ?></div><div class="scard-label">Video</div></div>
+  <div class="scard"><div class="scard-icon" style="color:var(--accent)"><i class="lucide lucide-briefcase"></i></div><div class="scard-val"><?= $jml_experience ?></div><div class="scard-label">Experience</div></div>
+  <div class="scard"><div class="scard-icon" style="color:var(--accent)"><i class="lucide lucide-code-2"></i></div><div class="scard-val"><?= $jml_projects ?></div><div class="scard-label">Projects</div></div>
+  <div class="scard"><div class="scard-icon" style="color:var(--amber)"><i class="lucide lucide-zap"></i></div><div class="scard-val"><?= $jml_skills ?></div><div class="scard-label">Skills</div></div>
+  <div class="scard"><div class="scard-icon" style="color:var(--green)"><i class="lucide lucide-building-2"></i></div><div class="scard-val"><?= $jml_clients ?></div><div class="scard-label">Clients</div></div>
+  <div class="scard"><div class="scard-icon" style="color:var(--accent)"><i class="lucide lucide-images"></i></div><div class="scard-val"><?= $jml_foto ?></div><div class="scard-label">Foto Galeri</div></div>
+  <div class="scard"><div class="scard-icon" style="color:var(--red)"><i class="lucide lucide-clapperboard"></i></div><div class="scard-val"><?= $jml_video ?></div><div class="scard-label">Video</div></div>
 </div>
 
 <!-- ROW 1 -->
