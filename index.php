@@ -40,6 +40,39 @@ function getYouTubeEmbed($url) {
     <title><?= $nama ?> — IT Support & Full-stack Developer</title>
     <meta name="description" content="<?= $nama ?> — <?= $tagline ?>.">
     <meta name="robots" content="index, follow">
+    <meta name="author" content="<?= $nama ?>">
+    <link rel="canonical" href="https://rsby.my.id/">
+
+    <!-- Open Graph / Social Preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://rsby.my.id/">
+    <meta property="og:title" content="<?= $nama ?> — IT Support & Full-stack Developer">
+    <meta property="og:description" content="<?= $tagline ?>. Tersedia untuk proyek IT Support, Networking, dan Web Development.">
+    <meta property="og:image" content="<?= $foto ?>">
+    <meta property="og:locale" content="id_ID">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="<?= $nama ?> — IT Support & Full-stack Developer">
+    <meta name="twitter:description" content="<?= $tagline ?>">
+    <meta name="twitter:image" content="<?= $foto ?>">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "<?= $nama ?>",
+      "jobTitle": "IT Support Specialist & Full-stack Developer",
+      "email": "<?= $email ?>",
+      "url": "https://rsby.my.id/",
+      "image": "<?= $foto ?>",
+      "sameAs": [
+        "<?= $github ?>",
+        "<?= $linkedin ?>"
+      ],
+      "knowsAbout": ["IT Support", "Networking", "MikroTik", "PHP", "Python", "Next.js", "Docker", "Linux"]
+    }
+    </script>
+
     <link rel="icon" type="image/png" href="<?= $foto ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -98,7 +131,7 @@ function getYouTubeEmbed($url) {
 
         /* ── TOGGLE ── */
         .toggle {
-            position: fixed; top: 18px; right: 18px; z-index: 200;
+            position: fixed; top: 14px; right: 14px; z-index: 200;
             background: var(--card); border: 1px solid var(--border);
             border-radius: 99px; padding: 6px 13px 6px 10px;
             display: flex; align-items: center; gap: 6px; cursor: pointer;
@@ -108,6 +141,11 @@ function getYouTubeEmbed($url) {
         }
         .toggle:hover { border-color: var(--border-s); color: var(--text-hi); }
         .toggle i { font-size: 12px; }
+        @media (max-width: 560px) {
+            .toggle { top: 10px; right: 10px; padding: 5px 10px 5px 8px; font-size: 11px; }
+            .toggle span { display: none; }
+            header { padding-top: 50px; }
+        }
 
         /* ── LAYOUT ── */
         .page { max-width: 980px; margin: 0 auto; padding: 0 20px; }
@@ -151,6 +189,15 @@ function getYouTubeEmbed($url) {
         .btn:hover { border-color: var(--accent); color: var(--text-hi); }
         .btn-hi { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
         .btn-hi:hover { background: var(--accent); color: var(--bg); }
+
+        /* ── ABOUT BIO ── */
+        .about-bio {
+            max-width: 980px; margin: 0 auto;
+            padding: 0 20px 32px;
+            font-size: 13px; color: var(--text); line-height: 1.8;
+        }
+        .about-bio p { max-width: 640px; }
+        .about-bio strong { color: var(--text-hi); font-weight: 500; }
 
         /* ── BODY GRID ── */
         hr.sep { border: none; border-top: 1px solid var(--border); }
@@ -279,6 +326,10 @@ function getYouTubeEmbed($url) {
         </div>
     </div>
 </header>
+
+<div class="about-bio f d1">
+    <p>Saya seorang <strong>IT Support & Full-stack Developer</strong> berbasis di Jawa Tengah, dengan pengalaman menangani infrastruktur jaringan, server, dan pengembangan aplikasi web untuk instansi pemerintah maupun swasta. Fokus utama saya adalah memberikan solusi teknologi yang reliabel, efisien, dan tepat sasaran — mulai dari setup jaringan enterprise hingga membangun sistem berbasis web dari nol.</p>
+</div>
 
 <hr class="sep">
 
