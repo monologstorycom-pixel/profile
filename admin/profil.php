@@ -57,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $wa = preg_replace('/[^0-9]/', '', $_POST['whatsapp'] ?? '');
     $pdo->prepare("UPDATE profile_settings SET full_name=?,tagline=?,availability_status=?,email=?,github_link=?,linkedin_link=?,whatsapp=?,profile_picture=?,favicon_url=? WHERE id=?")
         ->execute([$_POST['full_name'],$_POST['tagline'],$_POST['availability_status'],$_POST['email'],$_POST['github_link'],$_POST['linkedin_link'],$wa,$profile_picture,$favicon_url,$profil['id']]);
+    log_activity($pdo, 'Memperbarui', 'Profil', $profil['id'], $_POST['full_name'] ?? '');
     if (!$pesan) $pesan = 'Profil berhasil diperbarui!';
     $profil = $pdo->query("SELECT * FROM profile_settings LIMIT 1")->fetch();
 }

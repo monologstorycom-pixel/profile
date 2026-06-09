@@ -264,11 +264,19 @@ $health_checks = [
         </details>
       <?php else: ?>
         <div class="act-list">
-          <?php foreach ($logs as $log): ?>
+          <?php foreach ($logs as $log):
+            $act = strtolower($log['action'] ?? '');
+            $ic = 'edit';
+            if (str_contains($act,'hapus')) $ic = 'projects';
+            elseif (str_contains($act,'tambah')) $ic = 'skills';
+            elseif (str_contains($act,'login')) $ic = 'profil';
+            $teks = trim(($log['action'] ?? '') . ' ' . ($log['entity'] ?? ''));
+            if (!empty($log['note'])) $teks .= ': ' . $log['note'];
+          ?>
           <div class="act-item">
-            <div class="act-icon"><?= icon('edit', 13) ?></div>
+            <div class="act-icon"><?= icon($ic, 13) ?></div>
             <div>
-              <div class="act-text"><?= htmlspecialchars($log['action']) ?></div>
+              <div class="act-text"><?= htmlspecialchars($teks) ?></div>
               <div class="act-time"><?= date('d M Y, H:i', strtotime($log['created_at'])) ?></div>
             </div>
           </div>

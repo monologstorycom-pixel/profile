@@ -10,7 +10,9 @@ $error = '';
 // HAPUS
 if (isset($_GET['hapus'])) {
     csrf_check_get();
+    $row = $pdo->prepare("SELECT skill_name FROM skills WHERE id=?"); $row->execute([(int)$_GET['hapus']]); $sn = $row->fetchColumn();
     $pdo->prepare("DELETE FROM skills WHERE id=?")->execute([(int)$_GET['hapus']]);
+    log_activity($pdo, 'Menghapus', 'Skill', (int)$_GET['hapus'], (string)$sn);
     header("Location: skills.php?ok=hapus"); exit;
 }
 
@@ -26,10 +28,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($id > 0) {
         $pdo->prepare("UPDATE skills SET group_name=?, skill_name=?, sort_order=? WHERE id=?")
             ->execute([$group, $skill, $order, $id]);
+        log_activity($pdo, 'Mengedit', 'Skill', $id, $skill . ' (' . $group . ')');
         header("Location: skills.php?ok=edit"); exit;
     } else {
         $pdo->prepare("INSERT INTO skills (group_name, skill_name, sort_order) VALUES (?,?,?)")
             ->execute([$group, $skill, $order]);
+        log_activity($pdo, 'Menambah', 'Skill', (int)$pdo->lastInsertId(), $skill . ' (' . $group . ')');
         header("Location: skills.php?ok=tambah"); exit;
     }
 }

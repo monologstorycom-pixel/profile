@@ -97,3 +97,30 @@ if (!function_exists('e')) {
         return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 }
+
+/* ─────────────────────────────────────────────
+   5. ACTIVITY LOG
+   Catat aksi admin (tambah/edit/hapus) ke tabel activity_log.
+   Aman dipanggil walau tabel belum ada (gagal tanpa error).
+   - $action : verba aksi, cth "Menambah", "Mengedit", "Menghapus"
+   - $entity : jenis data, cth "Project", "Skill", "Client"
+   - $note   : keterangan, cth judul/nama item
+───────────────────────────────────────────── */
+if (!function_exists('log_activity')) {
+    function log_activity(PDO $pdo, string $action, string $entity = '', $entity_id = null, string $note = ''): void {
+        try {
+            $cut = static fn(string $s, int $n): string =>
+                function_exists('mb_substr') ? mb_substr($s, 0, $n) : substr($s, 0, $n);
+            $pdo->prepare(
+                "INSERT INTO activity_log (action, entity, entity_id, note) VALUES (?,?,?,?)"
+            )->execute([
+                $cut($action, 100),
+                $cut($entity, 80),
+                $entity_id !== null ? $cut((string)$entity_id, 80) : null,
+                $cut($note, 255),
+            ]);
+        } catch (Throwable $e) {
+            // Diam saja — logging tidak boleh mengganggu operasi utama.
+        }
+    }
+}

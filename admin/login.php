@@ -57,6 +57,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_SESSION['last_activity']   = $now;
             $_SESSION['regen_at']        = $now;
 
+            // Catat login ke activity log (aman walau tabel tak ada)
+            try {
+                $pdo->prepare("INSERT INTO activity_log (action, entity, entity_id, note) VALUES (?,?,?,?)")
+                    ->execute(['Login', 'Auth', (int)$user['id'], $user['username']]);
+            } catch (Throwable $e) {}
+
             header("Location: index.php"); exit;
         } else {
             $_SESSION['login_attempts']++;

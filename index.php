@@ -189,14 +189,19 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 @media(max-width:680px){.hero{padding:100px 0 40px}}
 .hero-grid{display:grid;grid-template-columns:300px 1fr;gap:48px;align-items:center}
 @media(max-width:780px){.hero-grid{grid-template-columns:1fr;gap:28px;text-align:center;justify-items:center}}
-.hero-photo-wrap{position:relative;width:100%;max-width:300px;aspect-ratio:4/5}
-.hero-av{width:100%;height:100%;border-radius:22px;object-fit:cover;border:1px solid var(--line-2);
-  box-shadow:var(--shadow);cursor:pointer;transition:transform .3s,box-shadow .3s;background:var(--panel)}
+.hero-photo-wrap{position:relative;width:100%;max-width:300px;aspect-ratio:4/5;border-radius:22px;background:var(--panel);overflow:hidden}
+.hero-photo-wrap::before{content:'';position:absolute;inset:0;z-index:0;
+  background:linear-gradient(110deg,var(--panel) 30%,var(--panel-2) 50%,var(--panel) 70%);
+  background-size:220% 100%;animation:shimmer 1.4s ease-in-out infinite}
+@keyframes shimmer{0%{background-position:120% 0}100%{background-position:-120% 0}}
+.hero-av{position:relative;z-index:1;width:100%;height:100%;border-radius:22px;object-fit:cover;border:1px solid var(--line-2);
+  box-shadow:var(--shadow);cursor:pointer;background:var(--panel);opacity:0;transition:opacity .5s ease,transform .3s,box-shadow .3s}
+.hero-av.loaded{opacity:1}
 .hero-av:hover{transform:translateY(-4px);box-shadow:0 22px 60px rgba(0,0,0,.45)}
-.hero-photo-wrap::after{content:'';position:absolute;inset:-1px;border-radius:22px;padding:1px;
+.hero-photo-wrap::after{content:'';position:absolute;inset:-1px;border-radius:22px;padding:1px;z-index:2;
   background:var(--accent-g);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
   -webkit-mask-composite:xor;mask-composite:exclude;opacity:.5;pointer-events:none}
-.hero-photo-badge{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;
+.hero-photo-badge{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:6px;z-index:3;
   font-size:11px;font-weight:500;font-family:var(--mono);color:#fff;background:rgba(10,12,15,.7);backdrop-filter:blur(8px);
   padding:6px 13px;border-radius:99px;border:1px solid rgba(255,255,255,.14);white-space:nowrap}
 .hero-photo-badge i{font-size:7px;color:var(--green);animation:bpulse 2s ease infinite}
@@ -342,9 +347,22 @@ footer{padding:32px 0;border-top:1px solid var(--line);margin-top:24px}
 .fab-top:hover{color:var(--accent);border-color:var(--accent-line)}
 
 /* ════════ REVEAL ════════ */
-.rv{opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+.rv{opacity:0;transform:translateY(24px);transition:opacity .65s cubic-bezier(.16,1,.3,1),transform .65s cubic-bezier(.16,1,.3,1)}
 .rv.in{opacity:1;transform:none}
-@media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* Staggered children dalam grid yang sudah reveal */
+.proj-grid.rv:not(.in)>*,.tools.rv:not(.in)>*,.cl-grid.rv:not(.in)>*{opacity:0}
+.proj-grid.in>*,.tools.in>*,.cl-grid.in>*{opacity:0;transform:translateY(18px);animation:rvUp .6s cubic-bezier(.16,1,.3,1) forwards}
+.proj-grid.in>*:nth-child(1),.tools.in>*:nth-child(1),.cl-grid.in>*:nth-child(1){animation-delay:.02s}
+.proj-grid.in>*:nth-child(2),.tools.in>*:nth-child(2),.cl-grid.in>*:nth-child(2){animation-delay:.06s}
+.proj-grid.in>*:nth-child(3),.tools.in>*:nth-child(3),.cl-grid.in>*:nth-child(3){animation-delay:.1s}
+.proj-grid.in>*:nth-child(4),.tools.in>*:nth-child(4),.cl-grid.in>*:nth-child(4){animation-delay:.14s}
+.proj-grid.in>*:nth-child(5),.tools.in>*:nth-child(5),.cl-grid.in>*:nth-child(5){animation-delay:.18s}
+.proj-grid.in>*:nth-child(6),.tools.in>*:nth-child(6),.cl-grid.in>*:nth-child(6){animation-delay:.22s}
+.proj-grid.in>*:nth-child(n+7),.tools.in>*:nth-child(n+7),.cl-grid.in>*:nth-child(n+7){animation-delay:.26s}
+@keyframes rvUp{to{opacity:1;transform:none}}
+/* Container grid stagger: container sendiri tak perlu fade, biar child yang animasi */
+.proj-grid.rv,.tools.rv,.cl-grid.rv{opacity:1;transform:none;transition:none}
+@media(prefers-reduced-motion:reduce){.rv,.proj-grid.in>*,.tools.in>*,.cl-grid.in>*{opacity:1!important;transform:none!important;transition:none;animation:none}*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
 /* ════════ LIGHTBOX ════════ */
 .plb{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px)}
@@ -382,7 +400,7 @@ footer{padding:32px 0;border-top:1px solid var(--line);margin-top:24px}
 <header class="wrap hero">
   <div class="hero-grid">
     <div class="hero-photo-wrap">
-      <img class="hero-av" id="hero-av" src="<?= esc($foto_raw) ?>" alt="<?= esc($nama) ?>" loading="eager">
+      <img class="hero-av" id="hero-av" src="<?= esc($foto_raw) ?>" alt="<?= esc($nama) ?>" loading="eager" onload="this.classList.add('loaded')">
       <span class="hero-photo-badge"><i class="fas fa-circle"></i> Online</span>
     </div>
     <div class="hero-text">
@@ -410,7 +428,7 @@ footer{padding:32px 0;border-top:1px solid var(--line);margin-top:24px}
     </div>
     <a href="/slws/" class="sec-link">Lihat galeri foto <i class="fas fa-arrow-right"></i></a>
   </div>
-  <div class="proj-grid">
+  <div class="proj-grid rv">
     <?php foreach ($projects as $p):
       $is_new = isset($p['days_ago']) && $p['days_ago'] !== null && (int)$p['days_ago'] <= 30;
       $ext = !empty($p['link_url']) && preg_match('#^https?://#i', $p['link_url']);
@@ -573,7 +591,9 @@ function toggleTheme(){setTheme((document.documentElement.getAttribute('data-the
 setTheme(document.documentElement.getAttribute('data-theme')||'dark');
 
 const fabTop=document.getElementById('fab-top');
-addEventListener('scroll',()=>fabTop.classList.toggle('show',scrollY>500),{passive:true});
+function updFab(){if(fabTop)fabTop.classList.toggle('show',(window.scrollY||document.documentElement.scrollTop)>500);}
+addEventListener('scroll',updFab,{passive:true});
+updFab();
 
 const links=document.querySelectorAll('.nav-link');
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const id=e.target.id;links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+id))}}),{rootMargin:'-45% 0px -50% 0px'});
@@ -583,6 +603,7 @@ const ro=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.targ
 document.querySelectorAll('.rv').forEach(el=>ro.observe(el));
 
 document.getElementById('hero-av').onclick=()=>{document.getElementById('plb').classList.add('open');document.body.style.overflow='hidden'};
+(function(){var a=document.getElementById('hero-av');if(a&&a.complete&&a.naturalWidth)a.classList.add('loaded')})();
 function closePlb(){document.getElementById('plb').classList.remove('open');document.body.style.overflow=''}
 addEventListener('keydown',e=>{if(e.key==='Escape')closePlb()});
 </script>

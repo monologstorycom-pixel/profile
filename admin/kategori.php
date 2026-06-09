@@ -12,7 +12,9 @@ if ($aksi == 'hapus' && isset($_GET['id'])) {
     // Validasi slug agar tidak bisa lewatkan path traversal
     $slug = preg_replace('/[^a-z0-9\-_]/i', '', (string)$_GET['id']);
     if ($slug !== '') {
+        $row = $pdo->prepare("SELECT name FROM slws_categories WHERE id=?"); $row->execute([$slug]); $kn = $row->fetchColumn();
         $pdo->prepare("DELETE FROM slws_categories WHERE id = ?")->execute([$slug]);
+        log_activity($pdo, 'Menghapus', 'Kategori', $slug, (string)$kn);
     }
     header("Location: kategori.php?pesan=dihapus"); exit;
 }
@@ -21,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!empty($_POST['id_edit'])) {
         $pdo->prepare("UPDATE slws_categories SET name=?, icon=? WHERE id=?")
             ->execute([$_POST['name'], $_POST['icon'], $_POST['id_edit']]);
+        log_activity($pdo, 'Mengedit', 'Kategori', $_POST['id_edit'], $_POST['name']);
         header("Location: kategori.php?pesan=diedit"); exit;
     } else {
         $id_kategori = strtolower(str_replace(' ', '-', trim($_POST['name'])));
@@ -31,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } else {
             $pdo->prepare("INSERT INTO slws_categories (id, name, icon) VALUES (?,?,?)")
                 ->execute([$id_kategori, $_POST['name'], $_POST['icon']]);
+            log_activity($pdo, 'Menambah', 'Kategori', $id_kategori, $_POST['name']);
             header("Location: kategori.php?pesan=ditambah"); exit;
         }
     }

@@ -9,7 +9,9 @@ $pesan = '';
 
 if ($aksi == 'hapus' && isset($_GET['id'])) {
     csrf_check_get();
+    $row = $pdo->prepare("SELECT title FROM videos WHERE id=?"); $row->execute([(int)$_GET['id']]); $vt = $row->fetchColumn();
     $pdo->prepare("DELETE FROM videos WHERE id = ?")->execute([(int)$_GET['id']]);
+    log_activity($pdo, 'Menghapus', 'Video', (int)$_GET['id'], (string)$vt);
     header("Location: video.php?pesan=dihapus"); exit;
 }
 
@@ -17,9 +19,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $title = $_POST['title']; $url = $_POST['video_url']; $desc = $_POST['description'];
     if (!empty($_POST['id'])) {
         $pdo->prepare("UPDATE videos SET title=?,video_url=?,description=? WHERE id=?")->execute([$title,$url,$desc,$_POST['id']]);
+        log_activity($pdo, 'Mengedit', 'Video', (int)$_POST['id'], $title);
         header("Location: video.php?pesan=diedit");
     } else {
         $pdo->prepare("INSERT INTO videos (title,video_url,description) VALUES (?,?,?)")->execute([$title,$url,$desc]);
+        log_activity($pdo, 'Menambah', 'Video', (int)$pdo->lastInsertId(), $title);
         header("Location: video.php?pesan=ditambah");
     }
     exit;

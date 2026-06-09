@@ -9,7 +9,9 @@ $pesan = '';
 
 if ($aksi == 'hapus' && isset($_GET['id'])) {
     csrf_check_get();
+    $row = $pdo->prepare("SELECT title FROM projects WHERE id=?"); $row->execute([(int)$_GET['id']]); $t = $row->fetchColumn();
     $pdo->prepare("DELETE FROM projects WHERE id = ?")->execute([(int)$_GET['id']]);
+    log_activity($pdo, 'Menghapus', 'Project', (int)$_GET['id'], (string)$t);
     header("Location: projects.php?pesan=dihapus"); exit;
 }
 
@@ -22,10 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!empty($_POST['id'])) {
         $pdo->prepare("UPDATE projects SET title=?, description=?, icon_class=?, link_url=? WHERE id=?")
             ->execute([$title, $description, $icon_class, $link_url, $_POST['id']]);
+        log_activity($pdo, 'Mengedit', 'Project', (int)$_POST['id'], $title);
         header("Location: projects.php?pesan=diedit");
     } else {
         $pdo->prepare("INSERT INTO projects (title, description, icon_class, link_url) VALUES (?,?,?,?)")
             ->execute([$title, $description, $icon_class, $link_url]);
+        log_activity($pdo, 'Menambah', 'Project', (int)$pdo->lastInsertId(), $title);
         header("Location: projects.php?pesan=ditambah");
     }
     exit;

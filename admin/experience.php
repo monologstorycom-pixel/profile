@@ -9,7 +9,9 @@ $pesan = '';
 
 if ($aksi == 'hapus' && isset($_GET['id'])) {
     csrf_check_get();
+    $row = $pdo->prepare("SELECT job_title FROM experiences WHERE id=?"); $row->execute([(int)$_GET['id']]); $j = $row->fetchColumn();
     $pdo->prepare("DELETE FROM experiences WHERE id = ?")->execute([(int)$_GET['id']]);
+    log_activity($pdo, 'Menghapus', 'Experience', (int)$_GET['id'], (string)$j);
     header("Location: experience.php?pesan=dihapus"); exit;
 }
 
@@ -23,10 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (!empty($_POST['id'])) {
         $pdo->prepare("UPDATE experiences SET job_title=?, company=?, year_range=?, description=?, is_active=? WHERE id=?")
             ->execute([$job_title, $company, $year_range, $description, $is_active, $_POST['id']]);
+        log_activity($pdo, 'Mengedit', 'Experience', (int)$_POST['id'], $job_title . ' @ ' . $company);
         header("Location: experience.php?pesan=diedit");
     } else {
         $pdo->prepare("INSERT INTO experiences (job_title, company, year_range, description, is_active) VALUES (?,?,?,?,?)")
             ->execute([$job_title, $company, $year_range, $description, $is_active]);
+        log_activity($pdo, 'Menambah', 'Experience', (int)$pdo->lastInsertId(), $job_title . ' @ ' . $company);
         header("Location: experience.php?pesan=ditambah");
     }
     exit;

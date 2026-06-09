@@ -10,7 +10,9 @@ $error = '';
 // HAPUS
 if (isset($_GET['hapus'])) {
     csrf_check_get();
+    $row = $pdo->prepare("SELECT name FROM clients WHERE id=?"); $row->execute([(int)$_GET['hapus']]); $cn = $row->fetchColumn();
     $pdo->prepare("DELETE FROM clients WHERE id=?")->execute([(int)$_GET['hapus']]);
+    log_activity($pdo, 'Menghapus', 'Client', (int)$_GET['hapus'], (string)$cn);
     header("Location: clients.php?ok=hapus"); exit;
 }
 
@@ -28,10 +30,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($id > 0) {
         $pdo->prepare("UPDATE clients SET name=?, location=?, url=?, icon_class=?, sort_order=? WHERE id=?")
             ->execute([$name, $loc, $url ?: null, $icon, $order, $id]);
+        log_activity($pdo, 'Mengedit', 'Client', $id, $name);
         header("Location: clients.php?ok=edit"); exit;
     } else {
         $pdo->prepare("INSERT INTO clients (name, location, url, icon_class, sort_order) VALUES (?,?,?,?,?)")
             ->execute([$name, $loc, $url ?: null, $icon, $order]);
+        log_activity($pdo, 'Menambah', 'Client', (int)$pdo->lastInsertId(), $name);
         header("Location: clients.php?ok=tambah"); exit;
     }
 }
