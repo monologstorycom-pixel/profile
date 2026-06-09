@@ -33,8 +33,6 @@ try {
     try { $projects = $pdo->query("SELECT *, NULL AS days_ago FROM projects ORDER BY id DESC")->fetchAll(); } catch (Exception $e2) {}
 }
 
-/* VIDEOS dihilangkan dari halaman publik */
-
 /* SKILLS */
 $skills_raw = [];
 try {
@@ -49,13 +47,39 @@ if (empty($skills_raw)) {
         'Infrastructure' => ['MikroTik', 'Proxmox', 'Docker', 'Linux'],
     ];
 }
+// Flat list skill untuk hero pills (ambil maksimal 6 yang representatif)
+$skill_flat = [];
+foreach ($skills_raw as $g => $list) foreach ($list as $s) $skill_flat[] = $s;
+$hero_pills = array_slice(array_values(array_unique($skill_flat)), 0, 6);
 
 /* CLIENTS */
 $clients = [];
 try { $clients = $pdo->query("SELECT * FROM clients ORDER BY sort_order, id")->fetchAll(); } catch (Exception $e) {}
+
+/* STATS */
+$jml_proj = count($projects);
+$jml_klien = count($clients);
+// Hitung tahun pengalaman dari experience paling lama (ambil angka tahun pertama)
+$min_year = (int)date('Y');
+foreach ($experiences as $e) {
+    if (preg_match('/(20\d{2})/', $e['year_range'] ?? '', $m)) $min_year = min($min_year, (int)$m[1]);
+}
+$years_exp = max(1, (int)date('Y') - $min_year);
+
+/* TOOLS — devicon CDN (logo asli) */
+$tools = [
+  ['name'=>'PHP',      'src'=>'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg'],
+  ['name'=>'Python',   'src'=>'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg'],
+  ['name'=>'Next.js',  'src'=>'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg', 'invert'=>true],
+  ['name'=>'Docker',   'src'=>'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg'],
+  ['name'=>'Linux',    'src'=>'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linux/linux-original.svg'],
+  ['name'=>'MySQL',    'src'=>'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg'],
+  ['name'=>'Proxmox',  'src'=>'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/proxmox/proxmox-original.svg'],
+  ['name'=>'MikroTik', 'fa'=>'fas fa-network-wired'],
+];
 ?>
 <!DOCTYPE html>
-<html lang="id" data-theme="dark">
+<html lang="id" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -86,106 +110,115 @@ try { $clients = $pdo->query("SELECT * FROM clients ORDER BY sort_order, id")->f
 
 <link rel="icon" href="<?= esc($favicon) ?>" type="<?= str_ends_with($favicon, '.svg') ? 'image/svg+xml' : 'image/png' ?>">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0a0a0a">
+<meta name="theme-color" content="#ffffff">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap"></noscript>
 <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
 
-<script>(function(){try{var t=localStorage.getItem('rsby-theme')||'dark';document.documentElement.setAttribute('data-theme',t);}catch(e){}})()</script>
+<script>(function(){try{var t=localStorage.getItem('rsby-theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})()</script>
 
 <style>
-/* ════════ TOKENS — monochrome + 1 green accent ════════ */
-[data-theme="dark"]{
-  --bg:#0a0a0b; --bg-2:#0f0f11; --card:#131316; --card-2:#1a1a1e;
-  --line:rgba(255,255,255,.07); --line-2:rgba(255,255,255,.12);
-  --text:#a1a1aa; --text-hi:#fafafa; --text-soft:#71717a; --text-mute:#52525b;
-  --accent:#4ade80; --accent-soft:rgba(74,222,128,.12); --accent-line:rgba(74,222,128,.3);
-  --shadow:0 1px 2px rgba(0,0,0,.4),0 16px 40px -12px rgba(0,0,0,.5);
-}
+/* ════════ TOKENS ════════ */
 [data-theme="light"]{
-  --bg:#fbfbfa; --bg-2:#ffffff; --card:#ffffff; --card-2:#f6f6f4;
-  --line:rgba(0,0,0,.07); --line-2:rgba(0,0,0,.13);
-  --text:#52525b; --text-hi:#18181b; --text-soft:#71717a; --text-mute:#a1a1aa;
-  --accent:#16a34a; --accent-soft:rgba(22,163,74,.08); --accent-line:rgba(22,163,74,.25);
-  --shadow:0 1px 2px rgba(0,0,0,.04),0 12px 32px -12px rgba(0,0,0,.1);
+  --bg:#f4f4f2; --panel:#ffffff; --panel-2:#fafafa;
+  --line:rgba(0,0,0,.08); --line-2:rgba(0,0,0,.14);
+  --text:#3f3f46; --text-hi:#111114; --text-soft:#71717a; --text-mute:#a1a1aa;
+  --accent:#15a34a; --accent-soft:rgba(21,163,74,.1); --accent-line:rgba(21,163,74,.28);
+  --ink:#111114; --on-ink:#ffffff;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 18px 40px -16px rgba(0,0,0,.16);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.05),0 6px 18px -8px rgba(0,0,0,.12);
+}
+[data-theme="dark"]{
+  --bg:#0b0b0d; --panel:#141417; --panel-2:#1a1a1e;
+  --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.14);
+  --text:#a1a1aa; --text-hi:#fafafa; --text-soft:#8a8a94; --text-mute:#52525b;
+  --accent:#4ade80; --accent-soft:rgba(74,222,128,.12); --accent-line:rgba(74,222,128,.3);
+  --ink:#fafafa; --on-ink:#0b0b0d;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 18px 44px -14px rgba(0,0,0,.6);
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4),0 8px 20px -10px rgba(0,0,0,.5);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
-  background:var(--bg);color:var(--text);
-  font-size:15px;line-height:1.7;font-weight:400;letter-spacing:-.01em;
-  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-  min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s;
-}
-img{max-width:100%;height:auto;display:block}
+body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);
+  font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s;letter-spacing:-.01em}
+img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
-::selection{background:var(--accent);color:#0a0a0b}
-::-webkit-scrollbar{width:9px;height:9px}
-::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:9px;border:2px solid var(--bg)}
+::selection{background:var(--accent);color:var(--on-ink)}
+::-webkit-scrollbar{width:10px}::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:10px;border:3px solid var(--bg)}
+.serif{font-family:'Instrument Serif',Georgia,serif;font-weight:400;letter-spacing:0}
 
-h1,h2,h3,.font-display{font-family:'Space Grotesk','Inter',sans-serif;letter-spacing:-.02em}
-
-.wrap{max-width:760px;margin:0 auto;padding:0 24px;position:relative}
+.wrap{max-width:980px;margin:0 auto;padding:0 24px}
 
 /* ════════ NAV ════════ */
-.nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 80%,transparent);
-  backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);
-  border-bottom:1px solid transparent;transition:border-color .3s}
-.nav.scrolled{border-color:var(--line)}
-.nav-inner{max-width:760px;margin:0 auto;padding:15px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-.brand{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--text-hi)}
-.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--text-hi);color:var(--bg);
-  display:grid;place-items:center;font-family:'Space Grotesk',monospace;font-weight:700;font-size:13px}
-.brand-text{font-size:14px;font-family:'Space Grotesk',sans-serif}
-.nav-right{display:flex;align-items:center;gap:6px}
+.nav{position:fixed;top:14px;left:0;right:0;z-index:60;display:flex;justify-content:center;pointer-events:none}
+.nav-pill{pointer-events:auto;display:flex;align-items:center;gap:6px;padding:7px 7px 7px 16px;
+  background:color-mix(in srgb,var(--panel) 82%,transparent);backdrop-filter:blur(16px) saturate(160%);
+  -webkit-backdrop-filter:blur(16px) saturate(160%);border:1px solid var(--line);border-radius:99px;box-shadow:var(--shadow-sm)}
+.nav-brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:var(--text-hi);padding-right:6px}
+.nav-brand .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.nav-sep{width:1px;height:18px;background:var(--line);margin:0 4px}
 .nav-links{display:flex;gap:2px}
-.nav-link{color:var(--text-soft);font-size:13.5px;font-weight:500;padding:7px 12px;border-radius:8px;transition:color .15s,background .15s}
-.nav-link:hover{color:var(--text-hi)}
+.nav-link{color:var(--text-soft);font-size:13.5px;font-weight:500;padding:7px 12px;border-radius:99px;transition:color .15s,background .15s}
+.nav-link:hover{color:var(--text-hi);background:var(--panel-2)}
 .nav-link.active{color:var(--accent)}
-@media(max-width:640px){.nav-links{display:none}}
-.icon-btn{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;color:var(--text-soft);
-  border:1px solid var(--line);transition:all .2s}
-.icon-btn:hover{color:var(--text-hi);border-color:var(--line-2)}
-.icon-btn svg{width:16px;height:16px}
+@media(max-width:680px){.nav-links,.nav-sep{display:none}}
+.nav-tg{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--text-soft);background:var(--panel-2);transition:all .2s}
+.nav-tg:hover{color:var(--text-hi)}
+.nav-tg svg{width:15px;height:15px}
 
 /* ════════ HERO ════════ */
-.hero{padding:72px 0 40px}
-@media(max-width:640px){.hero{padding:48px 0 28px}}
-.hero-photo{width:88px;height:88px;border-radius:24px;overflow:hidden;border:1px solid var(--line-2);
-  margin-bottom:28px;cursor:pointer;transition:transform .3s,border-radius .3s;background:var(--card)}
-.hero-photo:hover{transform:translateY(-2px);border-radius:50%}
-.hero-photo img{width:100%;height:100%;object-fit:cover}
-.hero-status{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--text-soft);
-  margin-bottom:18px;font-weight:500}
-.hero-status .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);
-  box-shadow:0 0 0 4px var(--accent-soft);animation:pulse 2.4s ease infinite}
-@keyframes pulse{0%,100%{box-shadow:0 0 0 4px var(--accent-soft)}50%{box-shadow:0 0 0 7px transparent}}
-.hero h1{font-size:clamp(2.2rem,6vw,3.1rem);font-weight:700;color:var(--text-hi);line-height:1.08;margin-bottom:18px}
-.hero h1 .grad{color:var(--accent)}
-.hero-bio{font-size:16px;line-height:1.75;color:var(--text);max-width:560px;margin-bottom:26px}
-.hero-bio strong{color:var(--text-hi);font-weight:600}
-.hero-actions{display:flex;flex-wrap:wrap;gap:10px}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:10px;
-  font-size:14px;font-weight:500;border:1px solid var(--line-2);background:var(--card);
-  color:var(--text-hi);transition:all .18s}
-.btn:hover{border-color:var(--text-soft);transform:translateY(-2px)}
-.btn-primary{background:var(--accent);color:#0a0a0b;border-color:var(--accent);font-weight:600}
-.btn-primary:hover{filter:brightness(1.08)}
-.btn i{font-size:14px}
+.hero{padding:130px 0 56px;text-align:center}
+@media(max-width:680px){.hero{padding:104px 0 40px}}
+.hero-av{width:84px;height:84px;border-radius:50%;object-fit:cover;margin:0 auto 22px;border:3px solid var(--panel);
+  box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .3s}
+.hero-av:hover{transform:scale(1.06)}
+.hero h1{font-size:clamp(2.6rem,8vw,4.6rem);line-height:1;color:var(--text-hi);margin-bottom:20px;font-weight:400}
+.hero h1 b{font-weight:600}
+.hero-desc{font-size:clamp(1.05rem,2.4vw,1.35rem);color:var(--text);max-width:600px;margin:0 auto 14px;line-height:1.5}
+.hero-desc b{color:var(--text-hi);font-weight:600}
+.hero-loc{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;color:var(--text-soft);margin-bottom:26px}
+.hero-loc i{color:var(--accent)}
+.pills{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:600px;margin:0 auto 30px}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:500;color:var(--text);
+  padding:7px 14px;border-radius:99px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.pill i{color:var(--accent);font-size:11px}
+.hero-cta{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:99px;font-size:14px;font-weight:600;transition:all .2s}
+.btn-dark{background:var(--ink);color:var(--on-ink)}
+.btn-dark:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.btn-ghost{background:var(--panel);color:var(--text-hi);border:1px solid var(--line-2)}
+.btn-ghost:hover{transform:translateY(-2px);border-color:var(--text-soft)}
 
 /* ════════ SECTION ════════ */
-section{padding:48px 0;scroll-margin-top:76px}
-@media(max-width:640px){section{padding:36px 0}}
-.sec-head{display:flex;align-items:center;gap:12px;margin-bottom:28px}
-.sec-num{font-family:'Space Grotesk',monospace;font-size:13px;font-weight:600;color:var(--accent)}
-.sec-title{font-size:20px;font-weight:600;color:var(--text-hi)}
-.sec-line{flex:1;height:1px;background:var(--line)}
+section{padding:60px 0;scroll-margin-top:90px}
+@media(max-width:680px){section{padding:44px 0}}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:30px;flex-wrap:wrap}
+.sec-eyebrow{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.sec-title{font-size:clamp(1.7rem,4vw,2.4rem);font-weight:400;color:var(--text-hi);line-height:1.1}
+.sec-link{font-size:13.5px;font-weight:500;color:var(--text-soft);display:inline-flex;align-items:center;gap:6px;transition:color .15s}
+.sec-link:hover{color:var(--accent)}
+
+/* ════════ PROJECTS ════════ */
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.pcard{display:flex;flex-direction:column;padding:22px;border-radius:20px;background:var(--panel);
+  border:1px solid var(--line);box-shadow:var(--shadow-sm);transition:all .25s;position:relative;min-height:188px}
+.pcard:hover{transform:translateY(-4px);box-shadow:var(--shadow);border-color:var(--line-2)}
+.pcard-ic{width:46px;height:46px;border-radius:13px;background:var(--accent-soft);color:var(--accent);
+  display:grid;place-items:center;font-size:19px;margin-bottom:auto}
+.pcard-new{position:absolute;top:22px;right:22px;font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  padding:3px 9px;border-radius:99px;background:var(--accent-soft);color:var(--accent);border:1px solid var(--accent-line)}
+.pcard-title{font-size:17px;font-weight:600;color:var(--text-hi);margin:18px 0 6px;display:flex;align-items:center;gap:8px}
+.pcard-title i{font-size:12px;color:var(--text-mute);transition:transform .2s,color .2s}
+.pcard:hover .pcard-title i{color:var(--accent);transform:translate(3px,-3px)}
+.pcard-desc{font-size:13.5px;color:var(--text-soft);line-height:1.6;margin-bottom:14px}
+.pcard-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}
+.ptag{font-size:11px;font-weight:500;color:var(--text-soft);padding:4px 10px;border-radius:99px;background:var(--panel-2);border:1px solid var(--line)}
 
 /* ════════ EXPERIENCE ════════ */
 .tl{position:relative;padding-left:26px}
@@ -196,101 +229,91 @@ section{padding:48px 0;scroll-margin-top:76px}
   background:var(--bg);border:1.5px solid var(--line-2);transition:all .25s}
 .tl-item.on::before{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
 .tl-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline;margin-bottom:3px}
-.tl-role{font-size:15.5px;font-weight:600;color:var(--text-hi)}
-.tl-year{font-family:'Space Grotesk',monospace;font-size:12px;color:var(--text-soft);white-space:nowrap}
+.tl-role{font-size:16px;font-weight:600;color:var(--text-hi)}
+.tl-year{font-size:12.5px;color:var(--text-soft);white-space:nowrap;font-weight:500}
 .tl-co{font-size:14px;color:var(--accent);font-weight:500;margin-bottom:10px}
 .tl-desc{font-size:14px;color:var(--text);line-height:1.7}
 .tl-desc ul{list-style:none;display:flex;flex-direction:column;gap:5px}
 .tl-desc li{position:relative;padding-left:16px}
 .tl-desc li::before{content:'';position:absolute;left:0;top:11px;width:6px;height:1px;background:var(--accent)}
-details.tg>summary{list-style:none;cursor:pointer;font-size:13px;color:var(--text-soft);
-  display:inline-flex;align-items:center;gap:6px;padding:3px 0;user-select:none;transition:color .15s}
+details.tg>summary{list-style:none;cursor:pointer;font-size:13px;color:var(--text-soft);display:inline-flex;align-items:center;gap:6px;padding:3px 0;user-select:none;transition:color .15s}
 details.tg>summary::-webkit-details-marker{display:none}
 details.tg>summary:hover{color:var(--text-hi)}
 details.tg>summary::after{content:'+';font-size:15px;transition:transform .2s}
 details.tg[open]>summary::after{transform:rotate(45deg)}
 details.tg[open]>summary{margin-bottom:8px}
 
-/* ════════ PROJECTS ════════ */
-.proj-list{display:flex;flex-direction:column;gap:10px}
-.proj{display:flex;align-items:flex-start;gap:16px;padding:18px 20px;border:1px solid var(--line);
-  border-radius:14px;background:var(--card);transition:all .22s;position:relative;overflow:hidden}
-.proj:hover{border-color:var(--line-2);background:var(--card-2);transform:translateY(-2px)}
-.proj-ic{width:42px;height:42px;border-radius:11px;background:var(--accent-soft);color:var(--accent);
-  display:grid;place-items:center;font-size:17px;flex-shrink:0}
-.proj-body{flex:1;min-width:0}
-.proj-top{display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap}
-.proj-title{font-size:15.5px;font-weight:600;color:var(--text-hi)}
-.proj-new{font-family:'Space Grotesk',monospace;font-size:9.5px;font-weight:700;letter-spacing:.07em;
-  padding:2px 7px;border-radius:99px;background:var(--accent-soft);color:var(--accent);
-  border:1px solid var(--accent-line);text-transform:uppercase}
-.proj-desc{font-size:13.5px;color:var(--text-soft);line-height:1.6}
-.proj-arrow{color:var(--text-mute);font-size:13px;align-self:center;transition:transform .2s,color .2s;flex-shrink:0}
-.proj:hover .proj-arrow{color:var(--accent);transform:translate(3px,-3px)}
+/* ════════ TOOLS ════════ */
+.tools{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:12px}
+.tool{display:flex;flex-direction:column;align-items:center;gap:10px;padding:22px 12px;border-radius:18px;
+  background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-sm);transition:all .25s}
+.tool:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
+.tool img{width:34px;height:34px;object-fit:contain}
+.tool .fa-fallback{font-size:30px;color:var(--accent)}
+[data-theme="dark"] .tool img.invert{filter:invert(1)}
+.tool span{font-size:12px;font-weight:500;color:var(--text-soft)}
 
-/* ════════ SKILLS ════════ */
-.skills{display:flex;flex-direction:column;gap:20px}
-.skill-row{display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start}
-@media(max-width:520px){.skill-row{grid-template-columns:1fr;gap:8px}}
-.skill-label{font-family:'Space Grotesk',monospace;font-size:12px;color:var(--text-soft);
-  font-weight:500;padding-top:6px}
-.skill-tags{display:flex;flex-wrap:wrap;gap:7px}
-.skill-tag{font-size:13px;padding:5px 12px;border-radius:8px;background:var(--card);
-  border:1px solid var(--line);color:var(--text);transition:all .18s;font-weight:500}
-.skill-tag:hover{border-color:var(--accent-line);color:var(--accent);background:var(--accent-soft);transform:translateY(-1px)}
+/* ════════ ABOUT + STATS ════════ */
+.about-card{padding:clamp(28px,5vw,48px);border-radius:24px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow-sm)}
+.about-card .eyebrow{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.about-card h2{font-size:clamp(1.6rem,4vw,2.3rem);font-weight:400;color:var(--text-hi);line-height:1.15;margin-bottom:16px;max-width:620px}
+.about-card p{font-size:15.5px;color:var(--text);line-height:1.75;max-width:600px;margin-bottom:28px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:560px){.stats{grid-template-columns:1fr;gap:0}.stat{padding:16px 0;border-bottom:1px solid var(--line)}.stat:last-child{border-bottom:0}}
+.stat{padding-top:20px;border-top:2px solid var(--ink)}
+@media(max-width:560px){.stat{border-top:0}}
+.stat-num{font-size:clamp(1.8rem,5vw,2.6rem);font-weight:600;color:var(--text-hi);line-height:1}
+.stat-num span{color:var(--accent)}
+.stat-label{font-size:13px;color:var(--text-soft);margin-top:6px}
 
 /* ════════ CLIENTS ════════ */
-.cl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-.cl{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);
-  border-radius:12px;background:var(--card);transition:all .2s}
-.cl:hover{border-color:var(--line-2);background:var(--card-2)}
+.cl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.cl{display:flex;align-items:center;gap:13px;padding:15px 17px;border-radius:16px;background:var(--panel);
+  border:1px solid var(--line);box-shadow:var(--shadow-sm);transition:all .22s}
+.cl:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
 a.cl:hover{border-color:var(--accent-line)}
-.cl-ic{width:34px;height:34px;border-radius:9px;background:var(--bg-2);display:grid;place-items:center;
-  color:var(--text-soft);font-size:14px;flex-shrink:0;transition:color .2s}
-.cl:hover .cl-ic{color:var(--accent)}
-.cl-name{font-size:13.5px;font-weight:500;color:var(--text-hi);line-height:1.3}
+.cl-ic{width:38px;height:38px;border-radius:11px;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent);font-size:15px;flex-shrink:0}
+.cl-name{font-size:14px;font-weight:600;color:var(--text-hi);line-height:1.3}
 .cl-loc{font-size:12px;color:var(--text-soft);margin-top:1px}
 
 /* ════════ CONTACT ════════ */
-.contact{padding:44px 32px;border-radius:20px;background:var(--card);border:1px solid var(--line);
-  text-align:center;position:relative;overflow:hidden;margin-top:8px}
-.contact::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
-  width:160px;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
-.contact h2{font-size:26px;font-weight:700;color:var(--text-hi);margin-bottom:10px}
-.contact p{font-size:15px;color:var(--text-soft);margin-bottom:24px;max-width:420px;margin-left:auto;margin-right:auto}
-.contact-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.contact{padding:clamp(40px,7vw,72px) 32px;border-radius:28px;background:var(--ink);color:var(--on-ink);text-align:center;position:relative;overflow:hidden}
+.contact h2{font-size:clamp(2rem,5vw,3rem);font-weight:400;margin-bottom:14px;line-height:1.1}
+.contact p{font-size:15.5px;opacity:.7;max-width:440px;margin:0 auto 28px;line-height:1.6}
+.contact-cta{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.btn-on-ink{background:var(--on-ink);color:var(--ink)}
+.btn-on-ink:hover{transform:translateY(-2px);opacity:.92}
+.btn-out-ink{border:1px solid color-mix(in srgb,var(--on-ink) 30%,transparent);color:var(--on-ink)}
+.btn-out-ink:hover{transform:translateY(-2px);background:color-mix(in srgb,var(--on-ink) 10%,transparent)}
 
 /* ════════ FOOTER ════════ */
-footer{margin-top:56px;padding:28px 0 36px;border-top:1px solid var(--line);text-align:center}
-.foot-row{display:flex;justify-content:center;gap:16px;margin-bottom:14px}
-.foot-row a{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;
-  border:1px solid var(--line);color:var(--text-soft);transition:all .2s}
-.foot-row a:hover{color:var(--accent);border-color:var(--accent-line);transform:translateY(-2px)}
-.foot-txt{font-size:12.5px;color:var(--text-mute);font-family:'Space Grotesk',monospace}
+footer{padding:48px 0 40px;border-top:1px solid var(--line);margin-top:60px}
+.foot-in{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.foot-txt{font-size:13px;color:var(--text-soft)}
+.foot-soc{display:flex;gap:8px}
+.foot-soc a{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--panel);
+  border:1px solid var(--line);color:var(--text-soft);box-shadow:var(--shadow-sm);transition:all .2s}
+.foot-soc a:hover{color:var(--accent);border-color:var(--accent-line);transform:translateY(-2px)}
 
 /* ════════ FAB ════════ */
 .fab{position:fixed;right:18px;bottom:18px;z-index:40;display:flex;flex-direction:column;gap:10px}
-.fab a,.fab button{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;
-  box-shadow:var(--shadow);transition:all .25s}
-.fab-wa{background:#25d366;color:#fff;font-size:20px}
+.fab a,.fab button{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;box-shadow:var(--shadow);transition:all .25s}
+.fab-wa{background:#25d366;color:#fff;font-size:21px}
 .fab-wa:hover{transform:translateY(-3px) scale(1.05)}
-.fab-top{background:var(--card);border:1px solid var(--line-2);color:var(--text-hi);font-size:15px;
-  opacity:0;pointer-events:none;transform:translateY(12px)}
+.fab-top{background:var(--panel);border:1px solid var(--line-2);color:var(--text-hi);font-size:15px;opacity:0;pointer-events:none;transform:translateY(12px)}
 .fab-top.show{opacity:1;pointer-events:auto;transform:none}
-.fab-top:hover{border-color:var(--accent);color:var(--accent)}
+.fab-top:hover{color:var(--accent);border-color:var(--accent-line)}
 
 /* ════════ REVEAL ════════ */
-.rv{opacity:0;transform:translateY(18px);transition:opacity .65s ease,transform .65s ease}
+.rv{opacity:0;transform:translateY(20px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
 .rv.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
 /* ════════ LIGHTBOX ════════ */
-.plb{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.9);
-  align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px)}
+.plb{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(8px)}
 .plb.open{display:flex;animation:fin .25s ease}
-.plb img{max-width:min(440px,90vw);max-height:82vh;border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:zin .3s ease}
-.plb-x{position:absolute;top:22px;right:24px;font-size:26px;color:#fff;opacity:.7;width:42px;height:42px;
-  border-radius:50%;display:grid;place-items:center;transition:all .15s}
+.plb img{max-width:min(420px,90vw);max-height:82vh;border-radius:24px;box-shadow:0 30px 80px rgba(0,0,0,.6);animation:zin .3s ease}
+.plb-x{position:absolute;top:22px;right:24px;font-size:26px;color:#fff;opacity:.7;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;transition:all .15s}
 .plb-x:hover{opacity:1;background:rgba(255,255,255,.1)}
 @keyframes fin{from{opacity:0}to{opacity:1}}
 @keyframes zin{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
@@ -298,23 +321,21 @@ footer{margin-top:56px;padding:28px 0 36px;border-top:1px solid var(--line);text
 </head>
 <body>
 
-<nav class="nav" id="nav">
-  <div class="nav-inner">
-    <a href="#top" class="brand">
-      <span class="brand-mark">RS</span>
-      <span class="brand-text">rsby.my.id</span>
-    </a>
-    <div class="nav-right">
-      <div class="nav-links">
-        <a href="#about" class="nav-link">About</a>
-        <a href="#work" class="nav-link">Work</a>
-        <a href="#skills" class="nav-link">Skills</a>
-        <a href="#contact" class="nav-link">Contact</a>
-      </div>
-      <button class="icon-btn" onclick="toggleTheme()" aria-label="Ganti tema">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="th-ic"></svg>
-      </button>
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-pill">
+    <a href="#top" class="nav-brand"><span class="dot"></span> <?= esc(explode(' ', $nama)[0]) ?></a>
+    <span class="nav-sep"></span>
+    <div class="nav-links">
+      <a href="#work" class="nav-link">Work</a>
+      <a href="#experience" class="nav-link">Experience</a>
+      <a href="#tools" class="nav-link">Tools</a>
+      <a href="#about" class="nav-link">About</a>
     </div>
+    <span class="nav-sep"></span>
+    <button class="nav-tg" onclick="toggleTheme()" aria-label="Ganti tema">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="th-ic"></svg>
+    </button>
   </div>
 </nav>
 
@@ -322,30 +343,65 @@ footer{margin-top:56px;padding:28px 0 36px;border-top:1px solid var(--line);text
 
 <!-- HERO -->
 <header class="wrap hero">
-  <div class="hero-photo" id="hero-photo" role="button" aria-label="Lihat foto">
-    <img src="<?= esc($foto_raw) ?>" alt="<?= esc($nama) ?>" width="88" height="88" loading="eager">
+  <img class="hero-av" id="hero-av" src="<?= esc($foto_raw) ?>" alt="<?= esc($nama) ?>" width="84" height="84" loading="eager">
+  <h1 class="serif">Halo, saya <b><?= esc($nama) ?></b></h1>
+  <p class="hero-desc"><b>IT Support &amp; Full-stack Developer</b> yang bangun sistem nyata, bukan cuma rencana.</p>
+  <div class="hero-loc"><i class="fas fa-circle" style="font-size:7px"></i> <?= esc($status) ?></div>
+  <div class="pills">
+    <?php foreach ($hero_pills as $p): ?><span class="pill"><i class="fas fa-check"></i><?= esc($p) ?></span><?php endforeach; ?>
   </div>
-  <div class="hero-status"><span class="dot"></span><?= esc($status) ?></div>
-  <h1>Halo, saya<br><span class="grad"><?= esc($nama) ?></span></h1>
-  <p class="hero-bio">
-    <strong>IT Support &amp; Full-stack Developer</strong> berbasis di Jawa Tengah.
-    Saya bantu bangun infrastruktur jaringan yang reliabel dan aplikasi web yang rapi —
-    dari setup enterprise sampai sistem dari nol.
-  </p>
-  <div class="hero-actions">
-    <a href="#contact" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Hire me</a>
-    <a href="<?= esc($github) ?>" target="_blank" rel="noopener" class="btn"><i class="fab fa-github"></i> GitHub</a>
-    <a href="<?= esc($linkedin) ?>" target="_blank" rel="noopener" class="btn"><i class="fab fa-linkedin"></i> LinkedIn</a>
+  <div class="hero-cta">
+    <a href="#contact" class="btn btn-dark"><i class="fas fa-paper-plane"></i> Diskusi Proyek</a>
+    <a href="<?= esc($github) ?>" target="_blank" rel="noopener" class="btn btn-ghost"><i class="fab fa-github"></i> GitHub</a>
   </div>
 </header>
 
-<!-- ABOUT / EXPERIENCE -->
-<?php if (!empty($experiences)): ?>
-<section id="about" class="wrap">
+<!-- PROJECTS -->
+<?php if (!empty($projects)): ?>
+<section id="work" class="wrap">
   <div class="sec-head rv">
-    <span class="sec-num">01</span>
-    <h2 class="sec-title">Experience</h2>
-    <div class="sec-line"></div>
+    <div>
+      <div class="sec-eyebrow">Projects</div>
+      <h2 class="sec-title serif">Karya pilihan</h2>
+    </div>
+    <a href="/slws/" class="sec-link">Lihat galeri foto <i class="fas fa-arrow-right"></i></a>
+  </div>
+  <div class="proj-grid">
+    <?php foreach ($projects as $p):
+      $is_new = isset($p['days_ago']) && $p['days_ago'] !== null && (int)$p['days_ago'] <= 30;
+      $ext = !empty($p['link_url']) && preg_match('#^https?://#i', $p['link_url']);
+      $tag = !empty($p['link_url']) ? 'a' : 'div';
+      $attr = !empty($p['link_url']) ? 'href="'.esc($p['link_url']).'"'.($ext?' target="_blank" rel="noopener"':'') : '';
+      // Tag heuristik dari deskripsi/judul
+      $auto_tags = [];
+      $hay = strtolower($p['title'].' '.$p['description']);
+      foreach (['Networking'=>'jaring|network|mikrotik','Web'=>'web|aplikasi|sistem|ticket|inventory','Monitoring'=>'monitor|noc|log','Fotografi'=>'foto|visual|photo'] as $lbl=>$rx) {
+        if (preg_match("/$rx/i", $hay)) $auto_tags[] = $lbl;
+      }
+      if (empty($auto_tags)) $auto_tags[] = 'Project';
+    ?>
+      <<?= $tag ?> class="pcard rv" <?= $attr ?>>
+        <div class="pcard-ic"><i class="<?= esc($p['icon_class']) ?>"></i></div>
+        <?php if ($is_new): ?><span class="pcard-new">New</span><?php endif; ?>
+        <div class="pcard-title"><?= esc($p['title']) ?><?php if (!empty($p['link_url'])): ?><i class="fas fa-arrow-up-right-from-square"></i><?php endif; ?></div>
+        <div class="pcard-desc"><?= esc($p['description']) ?></div>
+        <div class="pcard-tags">
+          <?php foreach (array_slice($auto_tags,0,3) as $t): ?><span class="ptag"><?= esc($t) ?></span><?php endforeach; ?>
+        </div>
+      </<?= $tag ?>>
+    <?php endforeach; ?>
+  </div>
+</section>
+<?php endif; ?>
+
+<!-- EXPERIENCE -->
+<?php if (!empty($experiences)): ?>
+<section id="experience" class="wrap">
+  <div class="sec-head rv">
+    <div>
+      <div class="sec-eyebrow">Journey</div>
+      <h2 class="sec-title serif">Pengalaman</h2>
+    </div>
   </div>
   <div class="tl rv">
     <?php foreach ($experiences as $exp):
@@ -370,53 +426,39 @@ footer{margin-top:56px;padding:28px 0 36px;border-top:1px solid var(--line);text
 </section>
 <?php endif; ?>
 
-<!-- PROJECTS -->
-<?php if (!empty($projects)): ?>
-<section id="work" class="wrap">
+<!-- TOOLS -->
+<section id="tools" class="wrap">
   <div class="sec-head rv">
-    <span class="sec-num">02</span>
-    <h2 class="sec-title">Projects</h2>
-    <div class="sec-line"></div>
+    <div>
+      <div class="sec-eyebrow">Stack</div>
+      <h2 class="sec-title serif">Tools yang saya pakai</h2>
+    </div>
   </div>
-  <div class="proj-list">
-    <?php foreach ($projects as $p):
-      $is_new = isset($p['days_ago']) && $p['days_ago'] !== null && (int)$p['days_ago'] <= 30;
-      $ext = !empty($p['link_url']) && preg_match('#^https?://#i', $p['link_url']);
-      $tag = !empty($p['link_url']) ? 'a' : 'div';
-      $attr = !empty($p['link_url']) ? 'href="'.esc($p['link_url']).'"'.($ext?' target="_blank" rel="noopener"':'') : '';
-    ?>
-      <<?= $tag ?> class="proj rv" <?= $attr ?>>
-        <div class="proj-ic"><i class="<?= esc($p['icon_class']) ?>"></i></div>
-        <div class="proj-body">
-          <div class="proj-top">
-            <span class="proj-title"><?= esc($p['title']) ?></span>
-            <?php if ($is_new): ?><span class="proj-new">New</span><?php endif; ?>
-          </div>
-          <div class="proj-desc"><?= esc($p['description']) ?></div>
-        </div>
-        <?php if (!empty($p['link_url'])): ?><i class="proj-arrow fas fa-arrow-up-right-from-square"></i><?php endif; ?>
-      </<?= $tag ?>>
+  <div class="tools rv">
+    <?php foreach ($tools as $t): ?>
+      <div class="tool">
+        <?php if (!empty($t['fa'])): ?>
+          <i class="<?= esc($t['fa']) ?> fa-fallback"></i>
+        <?php else: ?>
+          <img src="<?= esc($t['src']) ?>" alt="<?= esc($t['name']) ?>" class="<?= !empty($t['invert'])?'invert':'' ?>" loading="lazy" onerror="this.outerHTML='<i class=\'fas fa-cube fa-fallback\'></i>'">
+        <?php endif; ?>
+        <span><?= esc($t['name']) ?></span>
+      </div>
     <?php endforeach; ?>
   </div>
 </section>
-<?php endif; ?>
 
-<!-- SKILLS -->
-<section id="skills" class="wrap">
-  <div class="sec-head rv">
-    <span class="sec-num">03</span>
-    <h2 class="sec-title">Skills &amp; Stack</h2>
-    <div class="sec-line"></div>
-  </div>
-  <div class="skills rv">
-    <?php foreach ($skills_raw as $group => $list): ?>
-      <div class="skill-row">
-        <div class="skill-label"><?= esc($group) ?></div>
-        <div class="skill-tags">
-          <?php foreach ($list as $s): ?><span class="skill-tag"><?= esc($s) ?></span><?php endforeach; ?>
-        </div>
-      </div>
-    <?php endforeach; ?>
+<!-- ABOUT + STATS -->
+<section id="about" class="wrap">
+  <div class="about-card rv">
+    <div class="eyebrow">About Me</div>
+    <h2 class="serif">Teknologi adalah cara saya menyelesaikan masalah nyata.</h2>
+    <p>Saya seorang IT Support &amp; Full-stack Developer multidisiplin yang menikmati membangun infrastruktur dan aplikasi yang fungsional. Dengan perhatian pada detail, saya bantu instansi dan bisnis terhubung dengan teknologinya secara andal.</p>
+    <div class="stats">
+      <div class="stat"><div class="stat-num"><?= $years_exp ?><span>+</span></div><div class="stat-label">Tahun pengalaman</div></div>
+      <div class="stat"><div class="stat-num"><?= $jml_klien ?: $jml_proj ?><span>+</span></div><div class="stat-label"><?= $jml_klien ? 'Klien &amp; instansi' : 'Project dikerjakan' ?></div></div>
+      <div class="stat"><div class="stat-num serif" style="font-size:clamp(1.3rem,3.5vw,1.8rem)">Open</div><div class="stat-label">Untuk freelance &amp; kolaborasi</div></div>
+    </div>
   </div>
 </section>
 
@@ -424,9 +466,10 @@ footer{margin-top:56px;padding:28px 0 36px;border-top:1px solid var(--line);text
 <?php if (!empty($clients)): ?>
 <section id="clients" class="wrap">
   <div class="sec-head rv">
-    <span class="sec-num">04</span>
-    <h2 class="sec-title">Trusted By</h2>
-    <div class="sec-line"></div>
+    <div>
+      <div class="sec-eyebrow">Trusted by</div>
+      <h2 class="sec-title serif">Klien &amp; instansi</h2>
+    </div>
   </div>
   <div class="cl-grid rv">
     <?php foreach ($clients as $c):
@@ -448,23 +491,25 @@ footer{margin-top:56px;padding:28px 0 36px;border-top:1px solid var(--line);text
 <!-- CONTACT -->
 <section id="contact" class="wrap">
   <div class="contact rv">
-    <h2>Mari berkolaborasi.</h2>
-    <p>Punya proyek IT, jaringan, atau aplikasi web? Saya siap bantu wujudkan.</p>
-    <div class="contact-actions">
-      <a href="mailto:<?= esc($email) ?>" class="btn btn-primary"><i class="fas fa-envelope"></i> Email saya</a>
-      <?php if ($whatsapp): ?><a href="https://wa.me/<?= esc($whatsapp) ?>" target="_blank" rel="noopener" class="btn"><i class="fab fa-whatsapp" style="color:#25d366"></i> WhatsApp</a><?php endif; ?>
+    <h2 class="serif">Punya ide? Mari wujudkan.</h2>
+    <p>Kalau kamu punya kebutuhan IT, jaringan, atau aplikasi web — tinggal hubungi. Saya bantu sampai jadi.</p>
+    <div class="contact-cta">
+      <a href="mailto:<?= esc($email) ?>" class="btn btn-on-ink"><i class="fas fa-envelope"></i> Email saya</a>
+      <?php if ($whatsapp): ?><a href="https://wa.me/<?= esc($whatsapp) ?>" target="_blank" rel="noopener" class="btn btn-out-ink"><i class="fab fa-whatsapp"></i> WhatsApp</a><?php endif; ?>
     </div>
   </div>
 </section>
 
 <footer class="wrap">
-  <div class="foot-row">
-    <a href="<?= esc($github) ?>" target="_blank" rel="noopener" aria-label="GitHub"><i class="fab fa-github"></i></a>
-    <a href="<?= esc($linkedin) ?>" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-    <a href="mailto:<?= esc($email) ?>" aria-label="Email"><i class="fas fa-envelope"></i></a>
-    <a href="/slws/" aria-label="Selawas Visual"><i class="fas fa-camera"></i></a>
+  <div class="foot-in">
+    <div class="foot-txt">© <?= date('Y') ?> <?= esc($nama) ?>. All rights reserved.</div>
+    <div class="foot-soc">
+      <a href="<?= esc($github) ?>" target="_blank" rel="noopener" aria-label="GitHub"><i class="fab fa-github"></i></a>
+      <a href="<?= esc($linkedin) ?>" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+      <a href="mailto:<?= esc($email) ?>" aria-label="Email"><i class="fas fa-envelope"></i></a>
+      <a href="/slws/" aria-label="Selawas Visual"><i class="fas fa-camera"></i></a>
+    </div>
   </div>
-  <p class="foot-txt">© <?= date('Y') ?> <?= esc($nama) ?> · <a href="/sitemap.php" style="color:var(--accent)">sitemap</a></p>
 </footer>
 
 <div class="fab">
@@ -478,27 +523,22 @@ footer{margin-top:56px;padding:28px 0 36px;border-top:1px solid var(--line);text
 </div>
 
 <script>
-/* THEME */
 const TI={dark:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M6.3 17.7l-1.4 1.4M19.1 4.9l-1.4 1.4"/>',light:'<path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/>'};
 function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('th-ic').innerHTML=t==='dark'?TI.dark:TI.light;try{localStorage.setItem('rsby-theme',t)}catch(e){}}
-function toggleTheme(){setTheme((document.documentElement.getAttribute('data-theme')||'dark')==='dark'?'light':'dark')}
-setTheme(document.documentElement.getAttribute('data-theme')||'dark');
+function toggleTheme(){setTheme((document.documentElement.getAttribute('data-theme')||'light')==='dark'?'light':'dark')}
+setTheme(document.documentElement.getAttribute('data-theme')||'light');
 
-/* NAV + FAB scroll */
-const nav=document.getElementById('nav'),fabTop=document.getElementById('fab-top');
-addEventListener('scroll',()=>{const y=scrollY;nav.classList.toggle('scrolled',y>4);fabTop.classList.toggle('show',y>500)},{passive:true});
+const fabTop=document.getElementById('fab-top');
+addEventListener('scroll',()=>fabTop.classList.toggle('show',scrollY>500),{passive:true});
 
-/* ACTIVE NAV */
 const links=document.querySelectorAll('.nav-link');
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const id=e.target.id;links.forEach(l=>l.classList.toggle('active',l.getAttribute('href')==='#'+id))}}),{rootMargin:'-45% 0px -50% 0px'});
 document.querySelectorAll('section[id]').forEach(s=>io.observe(s));
 
-/* REVEAL */
 const ro=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');ro.unobserve(e.target)}}),{rootMargin:'0px 0px -40px 0px',threshold:.08});
 document.querySelectorAll('.rv').forEach(el=>ro.observe(el));
 
-/* PHOTO LIGHTBOX */
-document.getElementById('hero-photo').onclick=()=>{document.getElementById('plb').classList.add('open');document.body.style.overflow='hidden'};
+document.getElementById('hero-av').onclick=()=>{document.getElementById('plb').classList.add('open');document.body.style.overflow='hidden'};
 function closePlb(){document.getElementById('plb').classList.remove('open');document.body.style.overflow=''}
 addEventListener('keydown',e=>{if(e.key==='Escape')closePlb()});
 </script>
