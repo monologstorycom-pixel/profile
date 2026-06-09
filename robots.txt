@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /uploads/
+Disallow: /slws/api_photos.php
 
-Sitemap: https://rsby.my.id/sitemap.xml
+Sitemap: https://rsby.my.id/sitemap.php

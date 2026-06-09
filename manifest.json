@@ -3,19 +3,24 @@
   "short_name": "rsby.my.id",
   "description": "IT Support Specialist & Full-stack Developer berbasis di Jawa Tengah",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#090b09",
-  "theme_color": "#090b09",
+  "orientation": "portrait",
+  "background_color": "#0a0c0f",
+  "theme_color": "#0a0c0f",
+  "lang": "id",
   "icons": [
     {
-      "src": "https://avatars.githubusercontent.com/u/252295342?v=4",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
     },
     {
-      "src": "https://avatars.githubusercontent.com/u/252295342?v=4",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }

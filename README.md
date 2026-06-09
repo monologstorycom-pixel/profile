@@ -1,6 +1,6 @@
 # 🎨 Rsby — Portfolio App
 
-> Aplikasi portfolio berbasis PHP & MySQL yang dinamis, dilengkapi panel admin untuk mengelola konten secara mudah.
+> Aplikasi portfolio berbasis PHP & MySQL/MariaDB yang dinamis, dilengkapi panel admin untuk mengelola konten secara mudah.
 
 ![PHP](https://img.shields.io/badge/PHP-777BB4?style=flat-square&logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=flat-square&logo=mysql&logoColor=white)
@@ -9,231 +9,119 @@
 
 ---
 
-## 📋 Daftar Isi
-
-- [Tentang Aplikasi](#-tentang-aplikasi)
-- [Fitur](#-fitur)
-- [Struktur Folder](#-struktur-folder)
-- [Persyaratan Sistem](#-persyaratan-sistem)
-- [Instalasi](#-instalasi)
-- [Konfigurasi Database](#-konfigurasi-database)
-- [Penggunaan](#-penggunaan)
-- [Keamanan](#-keamanan)
-- [Kontribusi](#-kontribusi)
-- [Lisensi](#-lisensi)
-
----
-
-## 📖 Tentang Aplikasi
-
-**Rsby Portfolio** adalah aplikasi web portfolio yang dibangun menggunakan **PHP native** dan **MySQL**. Aplikasi ini memungkinkan pemilik untuk menampilkan karya, proyek, dan informasi diri secara profesional melalui halaman publik, serta mengelola semua konten melalui panel admin yang aman.
-
----
-
 ## ✨ Fitur
 
 ### 🌐 Halaman Publik
-- Tampilan portfolio yang bersih dan responsif
-- Galeri karya / proyek
-- Halaman tentang diri
-- Form kontak
+- Landing page modern dengan dark/light theme persisten
+- Section: About, Experience timeline, Projects, Video showcase, Skills, Clients, Contact
+- Smooth scroll, sticky nav dengan active section indicator
+- WhatsApp & email FAB di mobile
+- SEO-ready: JSON-LD Person schema, OG/Twitter meta, sitemap dinamis
+- PWA-ready dengan manifest
+
+### 📷 SELAWAS VISUAL (`/slws`)
+- Folder kategori foto dengan lazy-load on demand
+- Lightbox dengan keyboard nav + swipe mobile
+- YouTube video gallery dengan lazy embed (klik untuk play)
 
 ### 🔐 Panel Admin (`/admin`)
-- Login aman dengan autentikasi
-- Kelola data portfolio (tambah, edit, hapus)
-- Upload & manajemen file gambar (`/uploads`)
-- Dashboard statistik
+- Auth gate via `_auth.php` (session + idle timeout 2 jam + regenerate ID)
+- CSRF protection di semua form & link delete
+- Rate-limit login (5 attempts → lockout)
+- Dashboard dengan completeness check & uptime monitor
+- CRUD: Profil, Experience, Projects, Skills, Clients, Video, Kategori, Galeri
+- Upload galeri dengan client-side compress + server-side resize 1920px
+- Upload validation: MIME asli + filename random + path traversal guard
 
 ---
 
-## 📁 Struktur Folder
+## ⚙️ Persyaratan
 
-```
-profile/
-├── admin/              # Panel admin (protected)
-│   ├── index.php       # Dashboard admin
-│   ├── login.php       # Halaman login
-│   └── ...
-├── slws/               # Library / helper
-├── uploads/            # File gambar yang diupload
-├── index.php           # Halaman utama (publik)
-├── db_portfolio.sql    # Skema & data awal database
-├── .gitattributes
-└── README.md
-```
-
----
-
-## ⚙️ Persyaratan Sistem
-
-Pastikan server/lokal kamu memiliki:
-
-| Kebutuhan | Versi Minimum |
-|-----------|---------------|
-| PHP | >= 7.4 |
-| MySQL | >= 5.7 |
-| Web Server | Apache / Nginx |
-| Extension PHP | `mysqli`, `pdo`, `gd`, `fileinfo` |
-
-> 💡 Disarankan menggunakan **XAMPP**, **Laragon**, atau **WAMP** untuk development lokal.
+| Kebutuhan       | Versi Minimum    |
+|-----------------|------------------|
+| PHP             | 8.0+             |
+| MySQL/MariaDB   | 5.7+             |
+| Web Server      | Apache / Nginx   |
+| Extension PHP   | `pdo_mysql`, `gd`, `fileinfo` |
 
 ---
 
 ## 🚀 Instalasi
 
-### 1. Clone Repository
-
 ```bash
+# 1. Clone
 git clone https://github.com/monologstorycom-pixel/profile.git
 cd profile
+
+# 2. Import database
+mysql -u root -p db_portfolio < db_portfolio.sql
+
+# (jika sudah punya DB lama dari versi sebelumnya, cukup jalankan migrasi)
+mysql -u root -p db_portfolio < migrations.sql
 ```
 
-### 2. Pindahkan ke Folder Web Server
+## 🔧 Konfigurasi DB
 
-**XAMPP:**
-```bash
-# Windows
-xcopy /E /I profile C:\xampp\htdocs\profile
-
-# Linux/Mac
-cp -r profile /opt/lampp/htdocs/profile
-```
-
-**Laragon:**
-```
-Salin folder ke: C:\laragon\www\profile
-```
-
-### 3. Import Database
-
-- Buka **phpMyAdmin** di browser: `http://localhost/phpmyadmin`
-- Buat database baru, contoh: `db_portfolio`
-- Pilih tab **Import** → pilih file `db_portfolio.sql` → klik **Go**
-
-### 4. Konfigurasi Koneksi Database
-
-Buka file konfigurasi database (biasanya di `slws/` atau root), lalu sesuaikan:
-
-```php
-<?php
-define('DB_HOST', 'localhost');
-define('DB_USER', 'root');         // username MySQL kamu
-define('DB_PASS', '');             // password MySQL kamu
-define('DB_NAME', 'db_portfolio'); // nama database
-?>
-```
-
-### 5. Jalankan Aplikasi
-
-Buka browser dan akses:
-
-```
-http://localhost/profile
-```
-
-Panel admin:
-```
-http://localhost/profile/admin
-```
-
----
-
-## 🗄️ Konfigurasi Database
-
-Database menggunakan file `db_portfolio.sql`. File ini berisi:
-- Skema tabel (struktur database)
-- Data awal / dummy data (jika ada)
-
-Untuk **reset database**, cukup drop database lama dan import ulang file `db_portfolio.sql`.
-
----
-
-## 🖥️ Penggunaan
-
-### Akses Halaman Publik
-Buka `http://localhost/profile` untuk melihat tampilan portfolio.
-
-### Login Admin
-1. Buka `http://localhost/profile/admin`
-2. Masukkan username & password
-3. Kelola konten portfolio dari dashboard
-
-> ⚠️ **Penting:** Segera ganti password default setelah pertama kali login!
-
-### Upload File
-- File yang diupload tersimpan di folder `/uploads`
-- Pastikan folder `/uploads` memiliki **permission write**
+Edit `admin/koneksi.php` atau gunakan environment variable:
 
 ```bash
-chmod 755 uploads/
+DB_HOST=192.168.1.109
+DB_NAME=db_portfolio
+DB_USER=kasir
+DB_PASS=kasir
+```
+
+## 🔑 Default Admin
+
+Buat user admin manual di phpMyAdmin (file `buat_admin.php` sudah dihapus karena alasan keamanan).
+
+```sql
+-- Generate hash di PHP: password_hash('your_password', PASSWORD_DEFAULT)
+INSERT INTO admin_users (username, password)
+VALUES ('admin', '$2y$10$...hash_here...');
+```
+
+Atau via PHP CLI:
+```bash
+php -r "echo password_hash('secret123', PASSWORD_DEFAULT);"
 ```
 
 ---
 
-## 🔒 Keamanan
+## 📁 Struktur
 
-Beberapa hal yang disarankan sebelum deploy ke production:
-
-- [ ] Ganti password admin default
-- [ ] Nonaktifkan error reporting PHP di production
-- [ ] Batasi akses folder `/admin` dengan `.htaccess`
-- [ ] Validasi & sanitasi semua input form
-- [ ] Gunakan HTTPS
-
-Contoh `.htaccess` untuk proteksi folder admin:
-```apache
-AuthType Basic
-AuthName "Admin Area"
-AuthUserFile /path/to/.htpasswd
-Require valid-user
+```
+profile/
+├── admin/                # Panel admin
+│   ├── _auth.php         # Auth gate + CSRF helper
+│   ├── _layout.php       # Sidebar + topbar shared
+│   ├── koneksi.php       # PDO connection
+│   ├── login.php         # Login dengan rate-limit
+│   └── ...
+├── slws/                 # Selawas Visual gallery
+├── uploads/              # File upload (PHP execution disabled via .htaccess)
+├── index.php             # Landing page publik
+├── sitemap.php           # Sitemap dinamis
+├── manifest.json         # PWA manifest
+├── db_portfolio.sql      # Skema lengkap
+└── migrations.sql        # Patch untuk DB lama
 ```
 
 ---
 
-## 🛠️ Teknologi yang Digunakan
+## 🔒 Hardening
 
-- **PHP** — Backend logic
-- **MySQL** — Database
-- **HTML/CSS** — Frontend tampilan
-- **JavaScript** — Interaksi UI
-- **Apache** — Web server
-
----
-
-## 🤝 Kontribusi
-
-Kontribusi sangat diterima! Berikut caranya:
-
-1. **Fork** repository ini
-2. Buat branch baru: `git checkout -b fitur/nama-fitur`
-3. Commit perubahan: `git commit -m 'Tambah fitur baru'`
-4. Push ke branch: `git push origin fitur/nama-fitur`
-5. Buat **Pull Request**
+- ✅ Prepared statements di semua query (PDO)
+- ✅ CSRF token di POST & GET delete
+- ✅ Session: HttpOnly, SameSite=Lax, regenerate periodically
+- ✅ Login lockout setelah 5x gagal
+- ✅ Path traversal guard di file delete
+- ✅ MIME validation di upload + ekstensi disesuaikan dari MIME asli
+- ✅ `.htaccess` di `/uploads/` blokir eksekusi PHP/CGI
+- ✅ Output escape via `htmlspecialchars` / helper `e()`
 
 ---
 
-## 🐛 Melaporkan Bug
+## 📜 Lisensi
 
-Temukan bug? Silakan buat [Issue baru](https://github.com/monologstorycom-pixel/profile/issues) dengan menyertakan:
-- Deskripsi bug
-- Langkah untuk mereproduksi
-- Screenshot (jika ada)
-- Versi PHP & MySQL yang digunakan
-
----
-
-## 📄 Lisensi
-
-Proyek ini menggunakan lisensi **MIT**. Lihat file [LICENSE](LICENSE) untuk detail lengkap.
-
----
-
-## 📬 Kontak
-
-- 🐙 GitHub: [@monologstorycom-pixel](https://github.com/monologstorycom-pixel)
-
----
-
-<div align="center">
-  Made with ❤️ by <a href="https://github.com/monologstorycom-pixel">Monolog Story</a>
-</div>
+MIT License © Rizqi Subagyo

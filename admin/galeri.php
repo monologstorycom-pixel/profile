@@ -11,6 +11,7 @@ if (
 }
 
 require 'koneksi.php';
+require '_auth.php';
 $page_title  = 'Galeri Foto';
 $active_menu = 'galeri';
 
@@ -25,23 +26,44 @@ if ($post_size_error) {
 
 // ── HAPUS ──
 if (!$post_size_error && $aksi == 'hapus' && isset($_GET['id'])) {
+    csrf_check_get();
+    $foto_id = (int)$_GET['id'];
     $stmt = $pdo->prepare("SELECT image_path FROM slws_photos WHERE id = ?");
-    $stmt->execute([$_GET['id']]);
+    $stmt->execute([$foto_id]);
     $foto = $stmt->fetch();
     if ($foto) {
-        $file = '../' . $foto['image_path'];
-        if (file_exists($file)) unlink($file);
-        $pdo->prepare("DELETE FROM slws_photos WHERE id = ?")->execute([$_GET['id']]);
+        // Pastikan path tidak keluar dari uploads/galeri (path traversal)
+        $rel = $foto['image_path'];
+        if (strpos($rel, 'uploads/galeri/') === 0 && strpos($rel, '..') === false) {
+            $file = realpath(__DIR__ . '/../' . $rel);
+            $base = realpath(__DIR__ . '/../uploads/galeri');
+            if ($file && $base && strpos($file, $base) === 0 && file_exists($file)) {
+                @unlink($file);
+            }
+        }
+        $pdo->prepare("DELETE FROM slws_photos WHERE id = ?")->execute([$foto_id]);
     }
-    $kembali = isset($_GET['kat']) ? "?kat=".$_GET['kat']."&pesan=dihapus" : "?pesan=dihapus";
+    $kat_safe = isset($_GET['kat']) ? preg_replace('/[^a-z0-9\-_]/i', '', (string)$_GET['kat']) : '';
+    $kembali = $kat_safe !== '' ? "?kat=" . urlencode($kat_safe) . "&pesan=dihapus" : "?pesan=dihapus";
     header("Location: galeri.php" . $kembali); exit;
 }
 
 // ── UPLOAD ──
 if (!$post_size_error && $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['fotos'])) {
-    $category_id = $_POST['category_id'];
+    // Validasi kategori — pastikan slug aman & ada di DB
+    $category_id = preg_replace('/[^a-z0-9\-_]/i', '', (string)($_POST['category_id'] ?? ''));
+    if ($category_id === '') {
+        $_SESSION['flash_ok'] = 'Upload gagal: kategori tidak valid.';
+        header("Location: galeri.php"); exit;
+    }
+    $cek = $pdo->prepare("SELECT 1 FROM slws_categories WHERE id = ?");
+    $cek->execute([$category_id]);
+    if (!$cek->fetchColumn()) {
+        $_SESSION['flash_ok'] = 'Upload gagal: kategori tidak ditemukan.';
+        header("Location: galeri.php"); exit;
+    }
     $folder      = '../uploads/galeri/';
-    if (!is_dir($folder)) mkdir($folder, 0777, true);
+    if (!is_dir($folder)) mkdir($folder, 0755, true);
 
     function serverCompress($tmp_path, $destination) {
         if (!function_exists('imagecreatefromjpeg') || !function_exists('imagecreatetruecolor')) {
@@ -86,9 +108,13 @@ if (!$post_size_error && $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['
 
     $berhasil = 0;
     $dilewati = 0;
+    $allowed_mime = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     foreach ($_FILES['fotos']['tmp_name'] as $key => $tmp) {
         if ($_FILES['fotos']['error'][$key] !== UPLOAD_ERR_OK) { $dilewati++; continue; }
-        $fname = 'slws_' . time() . '_' . uniqid() . '.jpg';
+        // Validasi MIME asli — cegah upload script disamarkan jadi gambar
+        $real_mime = function_exists('mime_content_type') ? @mime_content_type($tmp) : '';
+        if (!in_array($real_mime, $allowed_mime, true)) { $dilewati++; continue; }
+        $fname = 'slws_' . time() . '_' . bin2hex(random_bytes(6)) . '.jpg';
         if (serverCompress($tmp, $folder . $fname)) {
             $pdo->prepare("INSERT INTO slws_photos (category_id, image_path) VALUES (?,?)")
                 ->execute([$category_id, 'uploads/galeri/' . $fname]);
@@ -100,7 +126,7 @@ if (!$post_size_error && $_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['
     $msg = "$berhasil foto berhasil diupload & dikompres";
     if ($dilewati > 0) $msg .= " ($dilewati dilewati)";
     $_SESSION['flash_ok'] = $msg;
-    header("Location: galeri.php?kat=$category_id"); exit;
+    header("Location: galeri.php?kat=" . urlencode($category_id)); exit;
 }
 
 // ── PESAN ──
@@ -176,7 +202,7 @@ require '_layout.php';
       <input type="hidden" name="p" value="1">
     </form>
     <button class="btn btn-primary" onclick="openUploadModal()">
-      <i class="lucide lucide-upload"></i> Upload Foto
+      <i class="fas fa-cloud-upload-alt"></i> Upload Foto
     </button>
   </div>
 </div>
@@ -190,7 +216,7 @@ require '_layout.php';
 
 <?php if (empty($photos)): ?>
   <div class="empty-box" style="padding:80px 20px">
-    <i class="lucide lucide-images"></i>
+    <i class="fas fa-images"></i>
     <p>Belum ada foto<?= $filter_kat ? ' di kategori ini' : '' ?>.</p>
   </div>
 <?php else: ?>
@@ -208,10 +234,10 @@ require '_layout.php';
         style="width:100%;height:100%;object-fit:cover;display:block;transition:transform 0.3s;will-change:transform"
       >
       <div class="foto-overlay">
-        <a href="galeri.php?aksi=hapus&id=<?= $img['id'] ?>&kat=<?= urlencode($filter_kat) ?>&p=<?= $page_num ?>"
+        <a href="galeri.php?aksi=hapus&id=<?= (int)$img['id'] ?>&kat=<?= urlencode($filter_kat) ?>&p=<?= (int)$page_num ?>&<?= csrf_qs() ?>"
            onclick="return confirm('Hapus foto ini?')"
            class="btn btn-danger btn-sm" style="backdrop-filter:blur(4px)">
-          <i class="lucide lucide-trash-2"></i> Hapus
+          <i class="fas fa-trash"></i> Hapus
         </a>
       </div>
       <div style="position:absolute;top:5px;left:5px;pointer-events:none">
@@ -229,7 +255,7 @@ require '_layout.php';
     if ($page_num > 1):
         $prev_url = '?kat=' . urlencode($filter_kat) . '&p=' . ($page_num - 1);
     ?>
-      <a href="<?= $prev_url ?>" class="btn btn-ghost btn-sm"><i class="lucide lucide-chevron-left"></i></a>
+      <a href="<?= $prev_url ?>" class="btn btn-ghost btn-sm"><i class="fas fa-chevron-left"></i></a>
     <?php endif; ?>
 
     <?php
@@ -254,7 +280,7 @@ require '_layout.php';
     <?php if ($page_num < $total_pages):
         $next_url = '?kat=' . urlencode($filter_kat) . '&p=' . ($page_num + 1);
     ?>
-      <a href="<?= $next_url ?>" class="btn btn-ghost btn-sm"><i class="lucide lucide-chevron-right"></i></a>
+      <a href="<?= $next_url ?>" class="btn btn-ghost btn-sm"><i class="fas fa-chevron-right"></i></a>
     <?php endif; ?>
   </div>
   <div style="text-align:center;font-size:11px;color:var(--text-dim);margin-top:10px;font-family:var(--mono)">
@@ -277,7 +303,7 @@ require '_layout.php';
       <?php else: ?>
 
         <div style="display:flex;align-items:flex-start;gap:8px;padding:11px 14px;background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.18);border-radius:8px;margin-bottom:18px;font-size:12px;color:var(--green);line-height:1.6">
-          <i class="lucide lucide-sparkles" style="font-size:15px;margin-top:1px;flex-shrink:0"></i>
+          <i class="fas fa-bolt" style="font-size:15px;margin-top:1px;flex-shrink:0"></i>
           <div>
             <strong>Auto Kompres Aktif</strong> — Setiap foto dikompres di browser <em>sebelum</em> diupload,
             ukuran di bawah <strong>900KB</strong>. File asli tidak berubah.
@@ -324,7 +350,7 @@ require '_layout.php';
       <button type="button" class="btn btn-ghost" onclick="closeUploadModal()">Batal</button>
       <?php if (!empty($kategori)): ?>
         <button type="button" id="btn-upload" class="btn btn-primary" onclick="startUpload()" disabled>
-          <i class="lucide lucide-cloud-upload"></i> Upload Sekarang
+          <i class="fas fa-cloud-upload-alt"></i> Upload Sekarang
         </button>
       <?php endif; ?>
     </div>
@@ -367,6 +393,7 @@ require '_layout.php';
 </style>
 
 <script>
+window.__csrf = <?= json_encode(csrf_token()) ?>;
 function openUploadModal()  { document.getElementById('modal-upload').classList.add('open'); }
 function closeUploadModal() { document.getElementById('modal-upload').classList.remove('open'); }
 document.getElementById('modal-upload').addEventListener('click', function(e){ if(e.target===this) closeUploadModal(); });
@@ -458,7 +485,7 @@ async function startUpload() {
   if (!compressedFiles.length) { alert('Pilih foto dulu!'); return; }
 
   document.getElementById('btn-upload').disabled = true;
-  document.getElementById('btn-upload').innerHTML = '<i class="lucide lucide-loader-2"></i> Uploading...';
+  document.getElementById('btn-upload').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
   document.getElementById('upload-progress').style.display = 'block';
 
   const bar   = document.getElementById('progress-bar');
@@ -470,6 +497,7 @@ async function startUpload() {
   for (const f of compressedFiles) {
     label.textContent = `Mengupload ${f.name}... (${done+1}/${total})`;
     const fd = new FormData();
+    fd.append('_csrf', window.__csrf || '');
     fd.append('category_id', catId);
     fd.append('fotos[]', f.blob, f.name.replace(/\.[^.]+$/, '') + '.jpg');
     try { await fetch('galeri.php', { method: 'POST', body: fd }); }

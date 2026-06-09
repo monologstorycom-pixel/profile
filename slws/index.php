@@ -343,12 +343,14 @@ function renderHome() {
         const card = document.createElement('div');
         card.className = 'folder-card';
         card.onclick = () => openCategory(cat.id, cat.name);
+        // Fallback ke fa-folder kalau icon DB tidak ada / invalid
+        const safeIcon = (cat.icon && /^fa-[\w-]+$/.test(cat.icon)) ? cat.icon : 'fa-folder';
         const coverHtml = cat.cover
             ? `<img class="folder-cover" src="${cat.cover}" alt="${cat.name}" loading="lazy" decoding="async">`
-            : `<div class="folder-cover-placeholder"><i class="fas ${cat.icon}"></i></div>`;
+            : `<div class="folder-cover-placeholder"><i class="fas ${safeIcon}"></i></div>`;
         card.innerHTML = `
             ${coverHtml}
-            <div class="folder-icon-badge"><i class="fas ${cat.icon}"></i></div>
+            <div class="folder-icon-badge"><i class="fas ${safeIcon}"></i></div>
             <div class="folder-info">
                 <div class="folder-name">${cat.name}</div>
                 <div class="folder-count">${cat.total} foto</div>

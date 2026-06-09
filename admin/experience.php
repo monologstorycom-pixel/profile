@@ -1,5 +1,6 @@
 <?php
 require 'koneksi.php';
+require '_auth.php';
 $page_title  = 'Experience';
 $active_menu = 'experience';
 
@@ -7,7 +8,8 @@ $aksi = $_GET['aksi'] ?? 'tampil';
 $pesan = '';
 
 if ($aksi == 'hapus' && isset($_GET['id'])) {
-    $pdo->prepare("DELETE FROM experiences WHERE id = ?")->execute([$_GET['id']]);
+    csrf_check_get();
+    $pdo->prepare("DELETE FROM experiences WHERE id = ?")->execute([(int)$_GET['id']]);
     header("Location: experience.php?pesan=dihapus"); exit;
 }
 
@@ -86,7 +88,7 @@ require '_layout.php';
                 <button class="btn btn-warn btn-sm btn-icon" onclick="editData(<?= $exp['id'] ?>, '<?= htmlspecialchars(addslashes($exp['job_title'])) ?>', '<?= htmlspecialchars(addslashes($exp['company'])) ?>', '<?= htmlspecialchars(addslashes($exp['year_range'])) ?>', `<?= addslashes(htmlspecialchars($exp['description'])) ?>`, <?= $exp['is_active'] ?>)" title="Edit">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
-                <a href="experience.php?aksi=hapus&id=<?= $exp['id'] ?>" class="btn btn-danger btn-sm btn-icon" onclick="return confirm('Hapus data ini?')" title="Hapus">
+                <a href="experience.php?aksi=hapus&id=<?= $exp['id'] ?>&<?= csrf_qs() ?>" class="btn btn-danger btn-sm btn-icon" onclick="return confirm('Hapus data ini?')" title="Hapus">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                 </a>
               </div>
@@ -103,6 +105,7 @@ require '_layout.php';
 <div class="modal-backdrop" id="modal-bd">
   <div class="modal modal-lg">
     <form method="POST">
+      <?= csrf_field() ?>
       <div class="modal-header">
         <span class="modal-title" id="modal-title">Tambah Experience</span>
         <button type="button" class="modal-close" onclick="closeModal()">×</button>

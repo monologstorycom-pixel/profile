@@ -1,5 +1,6 @@
 <?php
 require 'koneksi.php';
+require '_auth.php';
 $page_title  = 'Dashboard';
 $active_menu = 'dashboard';
 require '_layout.php';

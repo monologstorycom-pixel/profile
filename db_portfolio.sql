@@ -104,6 +104,7 @@ CREATE TABLE `profile_settings` (
   `tagline` varchar(255) NOT NULL,
   `availability_status` varchar(100) DEFAULT 'Tersedia untuk proyek baru',
   `profile_picture` varchar(255) DEFAULT NULL,
+  `favicon_url` varchar(255) DEFAULT NULL,
   `github_link` varchar(255) DEFAULT NULL,
   `linkedin_link` varchar(255) DEFAULT NULL,
   `whatsapp` varchar(20) DEFAULT NULL,
@@ -114,8 +115,8 @@ CREATE TABLE `profile_settings` (
 -- Dumping data for table `profile_settings`
 --
 
-INSERT INTO `profile_settings` (`id`, `full_name`, `tagline`, `availability_status`, `profile_picture`, `github_link`, `linkedin_link`, `whatsapp`, `email`) VALUES
-(1, 'Rizqi Subagyo', 'IT Support Specialist | Full-stack Developer', 'Tersedia untuk proyek baru', 'uploads/profil_1776757057.jpg', 'https://github.com/monologstorycom-pixel', 'https://www.linkedin.com/in/rizqi-subagyo-7ab331380/', '6287798652711', 'rizqisubagyo07@gmail.com');
+INSERT INTO `profile_settings` (`id`, `full_name`, `tagline`, `availability_status`, `profile_picture`, `favicon_url`, `github_link`, `linkedin_link`, `whatsapp`, `email`) VALUES
+(1, 'Rizqi Subagyo', 'IT Support Specialist | Full-stack Developer', 'Tersedia untuk proyek baru', 'uploads/profil_1776757057.jpg', NULL, 'https://github.com/monologstorycom-pixel', 'https://www.linkedin.com/in/rizqi-subagyo-7ab331380/', '6287798652711', 'rizqisubagyo07@gmail.com');
 
 -- --------------------------------------------------------
 
@@ -129,7 +130,8 @@ CREATE TABLE `projects` (
   `description` text NOT NULL,
   `icon_class` varchar(50) NOT NULL,
   `link_url` varchar(255) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -191,9 +193,9 @@ CREATE TABLE `slws_categories` (
 --
 
 INSERT INTO `slws_categories` (`id`, `name`, `icon`, `cover_image`) VALUES
-('couple', 'Couple Session', 'fa-couple', NULL),
-('portrait', 'Portrait', 'fa-heart', NULL),
-('tes', 'Wedding', 'fa-heart', NULL);
+('couple', 'Couple Session', 'fa-heart', NULL),
+('portrait', 'Portrait', 'fa-user', NULL),
+('tes', 'Wedding', 'fa-ring', NULL);
 
 -- --------------------------------------------------------
 
@@ -285,6 +287,21 @@ INSERT INTO `slws_photos` (`id`, `category_id`, `image_path`, `uploaded_at`) VAL
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `activity_log`
+--
+
+CREATE TABLE `activity_log` (
+  `id` int(11) NOT NULL,
+  `action` varchar(100) NOT NULL,
+  `entity` varchar(80) DEFAULT NULL,
+  `entity_id` varchar(80) DEFAULT NULL,
+  `note` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `videos`
 --
 
@@ -367,6 +384,13 @@ ALTER TABLE `videos`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Indexes for table `activity_log`
+--
+ALTER TABLE `activity_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_created_at` (`created_at`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -417,6 +441,12 @@ ALTER TABLE `slws_photos`
 --
 ALTER TABLE `videos`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `activity_log`
+--
+ALTER TABLE `activity_log`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables

@@ -1,8 +1,9 @@
 <?php
 // _layout.php — shared header + sidebar
 // Set $page_title and $active_menu before requiring.
-
-if (!isset($_SESSION['admin_logged_in'])) {
+// NOTE: Auth gate sudah ditangani _auth.php yang di-require di setiap halaman.
+// Sebagai safety net, kita tetap cek di sini.
+if (empty($_SESSION['admin_logged_in'])) {
     header("Location: login.php");
     exit;
 }
@@ -170,6 +171,10 @@ $menu_visual = [
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
 <noscript><link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet"></noscript>
+
+<!-- FontAwesome (untuk ikon di galeri, kategori, projects, video, dll) -->
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"></noscript>
 
 
 <style>

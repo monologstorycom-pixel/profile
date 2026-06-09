@@ -1,5 +1,6 @@
 <?php
 require 'koneksi.php';
+require '_auth.php';
 $page_title  = 'Video Portfolio';
 $active_menu = 'video';
 
@@ -7,7 +8,8 @@ $aksi = $_GET['aksi'] ?? '';
 $pesan = '';
 
 if ($aksi == 'hapus' && isset($_GET['id'])) {
-    $pdo->prepare("DELETE FROM videos WHERE id = ?")->execute([$_GET['id']]);
+    csrf_check_get();
+    $pdo->prepare("DELETE FROM videos WHERE id = ?")->execute([(int)$_GET['id']]);
     header("Location: video.php?pesan=dihapus"); exit;
 }
 
@@ -70,7 +72,7 @@ function ytThumb($url) {
           <button class="btn btn-warn btn-sm" onclick="editData(<?= $v['id'] ?>, '<?= htmlspecialchars(addslashes($v['title'])) ?>', '<?= htmlspecialchars(addslashes($v['video_url'])) ?>', '<?= htmlspecialchars(addslashes($v['description'])) ?>')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit
           </button>
-          <a href="video.php?aksi=hapus&id=<?= $v['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Hapus video ini?')">
+          <a href="video.php?aksi=hapus&id=<?= $v['id'] ?>&<?= csrf_qs() ?>" class="btn btn-danger btn-sm" onclick="return confirm('Hapus video ini?')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           </a>
         </div>
@@ -84,6 +86,7 @@ function ytThumb($url) {
 <div class="modal-backdrop" id="modal-bd">
   <div class="modal">
     <form method="POST">
+      <?= csrf_field() ?>
       <div class="modal-header">
         <span class="modal-title" id="modal-title">Tambah Video</span>
         <button type="button" class="modal-close" onclick="closeModal()">×</button>

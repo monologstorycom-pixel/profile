@@ -1,0 +1,23 @@
+# Cegah eksekusi PHP / script di folder upload
+# Apache 2.4
+<FilesMatch "\.(php|phtml|phar|php3|php4|php5|php7|phps|cgi|pl|py|sh)$">
+    Require all denied
+</FilesMatch>
+
+# Disable PHP engine kalau aktif
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+# Hanya izinkan akses gambar
+<FilesMatch "\.(jpg|jpeg|png|webp|gif|svg|ico)$">
+    Require all granted
+</FilesMatch>
+
+Options -Indexes -ExecCGI

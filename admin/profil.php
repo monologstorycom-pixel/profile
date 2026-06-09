@@ -1,10 +1,6 @@
 <?php
 require 'koneksi.php';
-
-// Auth check SEBELUM memproses POST apapun
-if (!isset($_SESSION['admin_logged_in'])) {
-    header('Location: login.php'); exit;
-}
+require '_auth.php';
 
 $page_title  = 'Profil';
 $active_menu = 'profil';
@@ -128,6 +124,7 @@ require '_layout.php';
 <?php endif; ?>
 
 <form method="POST" enctype="multipart/form-data">
+<?= csrf_field() ?>
 <div class="profil-layout">
 
   <!-- Kiri: informasi utama -->
