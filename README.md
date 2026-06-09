@@ -73,18 +73,15 @@ DB_PASS=kasir
 
 ## 🔑 Default Admin
 
-Buat user admin manual di phpMyAdmin (file `buat_admin.php` sudah dihapus karena alasan keamanan).
+Setelah import database, buka di browser:
 
-```sql
--- Generate hash di PHP: password_hash('your_password', PASSWORD_DEFAULT)
-INSERT INTO admin_users (username, password)
-VALUES ('admin', '$2y$10$...hash_here...');
+```
+http://localhost/profile/admin/setup.php
 ```
 
-Atau via PHP CLI:
-```bash
-php -r "echo password_hash('secret123', PASSWORD_DEFAULT);"
-```
+Halaman akan minta username + password. **File ini auto-lock setelah user pertama dibuat** dan menyediakan tombol untuk menghapus dirinya sendiri.
+
+> Kalau lupa password, hapus row di tabel `admin_users` lewat phpMyAdmin, lalu setup ulang akan terbuka kembali.
 
 ---
 
