@@ -33,9 +33,7 @@ try {
     try { $projects = $pdo->query("SELECT *, NULL AS days_ago FROM projects ORDER BY id DESC")->fetchAll(); } catch (Exception $e2) {}
 }
 
-/* VIDEOS */
-$videos = [];
-try { $videos = $pdo->query("SELECT * FROM videos ORDER BY id DESC LIMIT 6")->fetchAll(); } catch (Exception $e) {}
+/* VIDEOS dihilangkan dari halaman publik */
 
 /* SKILLS */
 $skills_raw = [];
@@ -55,17 +53,6 @@ if (empty($skills_raw)) {
 /* CLIENTS */
 $clients = [];
 try { $clients = $pdo->query("SELECT * FROM clients ORDER BY sort_order, id")->fetchAll(); } catch (Exception $e) {}
-
-function ytEmbed($url) {
-    if (preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/\s]{11})%i', $url, $m))
-        return "https://www.youtube.com/embed/" . $m[1] . "?rel=0";
-    return '';
-}
-function ytThumb($url) {
-    if (preg_match('%(?:youtube(?:-nocookie)?\.com/(?:[^/]+/.+/|(?:v|e(?:mbed)?)/|.*[?&]v=)|youtu\.be/)([^"&?/\s]{11})%i', $url, $m))
-        return "https://img.youtube.com/vi/{$m[1]}/mqdefault.jpg";
-    return '';
-}
 ?>
 <!DOCTYPE html>
 <html lang="id" data-theme="dark">
@@ -241,25 +228,6 @@ details.tg[open]>summary{margin-bottom:8px}
 .proj-arrow{color:var(--text-mute);font-size:13px;align-self:center;transition:transform .2s,color .2s;flex-shrink:0}
 .proj:hover .proj-arrow{color:var(--accent);transform:translate(3px,-3px)}
 
-/* ════════ VIDEOS ════════ */
-.vid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
-.vid{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card);transition:all .22s}
-.vid:hover{border-color:var(--line-2);transform:translateY(-2px);box-shadow:var(--shadow)}
-.vid-thumb{position:relative;aspect-ratio:16/9;background:#000;cursor:pointer;overflow:hidden}
-.vid-thumb img{width:100%;height:100%;object-fit:cover;opacity:.82;transition:opacity .25s,transform .4s}
-.vid-thumb:hover img{opacity:1;transform:scale(1.05)}
-.vid-play{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
-.vid-play span{width:52px;height:52px;border-radius:50%;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);
-  border:1.5px solid rgba(255,255,255,.5);display:grid;place-items:center;color:#fff;font-size:16px;transition:all .25s}
-.vid-thumb:hover .vid-play span{background:var(--accent);border-color:var(--accent);color:#0a0a0b;transform:scale(1.1)}
-.vid-iframe{display:none;aspect-ratio:16/9;background:#000}
-.vid-iframe.active{display:block}
-.vid-iframe iframe{width:100%;height:100%;border:0;display:block}
-.vid-thumb.hidden{display:none}
-.vid-body{padding:13px 16px}
-.vid-title{font-size:14px;font-weight:600;color:var(--text-hi);line-height:1.4}
-.vid-desc{font-size:12.5px;color:var(--text-soft);margin-top:3px}
-
 /* ════════ SKILLS ════════ */
 .skills{display:flex;flex-direction:column;gap:20px}
 .skill-row{display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start}
@@ -433,40 +401,10 @@ footer{margin-top:56px;padding:28px 0 36px;border-top:1px solid var(--line);text
 </section>
 <?php endif; ?>
 
-<!-- VIDEOS -->
-<?php if (!empty($videos)): ?>
-<section id="videos" class="wrap">
-  <div class="sec-head rv">
-    <span class="sec-num">03</span>
-    <h2 class="sec-title">Video Showcase</h2>
-    <div class="sec-line"></div>
-  </div>
-  <div class="vid-grid">
-    <?php foreach ($videos as $v):
-      $thumb = ytThumb($v['video_url']); $embed = ytEmbed($v['video_url']);
-      if (!$embed) continue; $vid = 'v'.(int)$v['id'];
-    ?>
-      <article class="vid rv">
-        <div class="vid-thumb" id="th-<?= $vid ?>" onclick="playVid('<?= $vid ?>','<?= esc($embed) ?>')" role="button" aria-label="Putar <?= esc($v['title']) ?>">
-          <?php if ($thumb): ?><img src="<?= esc($thumb) ?>" alt="<?= esc($v['title']) ?>" loading="lazy" decoding="async">
-          <?php else: ?><div style="width:100%;height:100%;background:#111;display:grid;place-items:center;color:#444;font-size:30px"><i class="fas fa-film"></i></div><?php endif; ?>
-          <div class="vid-play"><span><i class="fas fa-play"></i></span></div>
-        </div>
-        <div class="vid-iframe" id="if-<?= $vid ?>"></div>
-        <div class="vid-body">
-          <div class="vid-title"><?= esc($v['title']) ?></div>
-          <?php if (!empty($v['description'])): ?><div class="vid-desc"><?= esc($v['description']) ?></div><?php endif; ?>
-        </div>
-      </article>
-    <?php endforeach; ?>
-  </div>
-</section>
-<?php endif; ?>
-
 <!-- SKILLS -->
 <section id="skills" class="wrap">
   <div class="sec-head rv">
-    <span class="sec-num">04</span>
+    <span class="sec-num">03</span>
     <h2 class="sec-title">Skills &amp; Stack</h2>
     <div class="sec-line"></div>
   </div>
@@ -486,7 +424,7 @@ footer{margin-top:56px;padding:28px 0 36px;border-top:1px solid var(--line);text
 <?php if (!empty($clients)): ?>
 <section id="clients" class="wrap">
   <div class="sec-head rv">
-    <span class="sec-num">05</span>
+    <span class="sec-num">04</span>
     <h2 class="sec-title">Trusted By</h2>
     <div class="sec-line"></div>
   </div>
@@ -563,14 +501,6 @@ document.querySelectorAll('.rv').forEach(el=>ro.observe(el));
 document.getElementById('hero-photo').onclick=()=>{document.getElementById('plb').classList.add('open');document.body.style.overflow='hidden'};
 function closePlb(){document.getElementById('plb').classList.remove('open');document.body.style.overflow=''}
 addEventListener('keydown',e=>{if(e.key==='Escape')closePlb()});
-
-/* VIDEO */
-function playVid(id,embed){
-  document.querySelectorAll('.vid-iframe.active').forEach(el=>{if(el.id!=='if-'+id){el.innerHTML='';el.classList.remove('active');const t=document.getElementById(el.id.replace('if-','th-'));if(t)t.classList.remove('hidden')}});
-  const t=document.getElementById('th-'+id),w=document.getElementById('if-'+id);if(!w)return;
-  t.classList.add('hidden');w.classList.add('active');
-  w.innerHTML='<iframe src="'+embed+'&autoplay=1" allow="autoplay;encrypted-media;fullscreen" allowfullscreen loading="lazy"></iframe>';
-}
 </script>
 </body>
 </html>
